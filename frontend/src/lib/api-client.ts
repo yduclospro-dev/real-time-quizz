@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
-import { ApiError } from "@/types/auth.types";
+import { ApiResponse } from "../../../backend/src/common/types/api-response";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -31,20 +31,12 @@ class ApiClient {
     // Response interceptor
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError<ApiError>) => {
-        const apiError: ApiError = {
+      (error: AxiosError<ApiResponse>) => {
+        const apiError: ApiResponse = {
+          success: false,
           message: error.response?.data?.message || "Une erreur est survenue",
-          statusCode: error.response?.status,
           errors: error.response?.data?.errors,
         };
-
-        // Handle specific status codes
-        if (error.response?.status === 401) {
-          // Redirect to login or refresh token
-          if (typeof window !== "undefined") {
-            localStorage.removeItem("user");
-          }
-        }
 
         return Promise.reject(apiError);
       }

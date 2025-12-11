@@ -8,6 +8,12 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // CORS configuration
+  app.enableCors({
+    origin: 'http://localhost:8080',
+    credentials: true,
+  });
+
   // Cookie parser middleware
   app.use(cookieParser());
 

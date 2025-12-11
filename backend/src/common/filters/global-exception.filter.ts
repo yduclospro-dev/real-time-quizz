@@ -51,8 +51,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else if (exception instanceof Error) {
       message = exception.message;
     }
-
     // Format ApiResponse pour les erreurs
+    console.log('GlobalExceptionFilter caught an exception:', {
+      status,
+      message,
+      errors,
+    });
     const responseBody = ApiResponse.error(message, errors);
 
     response.status(status).json(responseBody);

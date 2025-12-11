@@ -2,9 +2,14 @@ export class ApiResponse<T = any> {
   success: boolean;
   message: string;
   data?: T;
-  errors?: any;
+  errors?: Array<{ field: string; message: string }>;
 
-  constructor(success: boolean, message: string, data?: T, errors?: any) {
+  constructor(
+    success: boolean,
+    message: string,
+    data?: T,
+    errors?: Array<{ field: string; message: string }>,
+  ) {
     this.success = success;
     this.message = message;
     if (data !== undefined) {
@@ -19,7 +24,10 @@ export class ApiResponse<T = any> {
     return new ApiResponse(true, message, data);
   }
 
-  static error(message: string, errors?: any): ApiResponse {
+  static error(
+    message: string,
+    errors?: Array<{ field: string; message: string }>,
+  ): ApiResponse {
     return new ApiResponse(false, message, undefined, errors);
   }
 }
