@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { Header } from "@/components/layout/Header";
 import QuestionSidebar from "@/components/quiz/QuestionSidebar";
 import QuestionEditor from "@/components/quiz/QuestionEditor";
 import QuestionSettingsModal from "@/components/quiz/QuestionSettingsModal";
@@ -149,32 +150,29 @@ export default function CreateQuizPage() {
       questions,
     });
     // For now, just redirect back
-    router.push("/dashboard/teacher");
+    router.push("/quiz");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-      {/* Header */}
-      <div className="bg-white border-b-2 border-gray-300 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Input
-            label=""
-            type="text"
-            placeholder="Titre du quiz"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="text-2xl font-bold max-w-md"
-          />
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={handleExit}>
-              Quitter
-            </Button>
-            <Button onClick={handleSaveQuiz}>
-              Enregistrer
-            </Button>
-          </div>
+      <Header showUser={false}>
+        <Input
+          label=""
+          type="text"
+          placeholder="Titre du quiz"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="text-2xl font-bold max-w-md"
+        />
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleExit}>
+            Quitter
+          </Button>
+          <Button onClick={handleSaveQuiz}>
+            Enregistrer
+          </Button>
         </div>
-      </div>
+      </Header>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-12 gap-6">

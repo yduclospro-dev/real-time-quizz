@@ -14,7 +14,7 @@ export const Button = ({
   ...props
 }: ButtonProps) => {
   const baseStyles =
-    "w-full font-medium py-2 px-4 rounded-lg transition-colors disabled:cursor-not-allowed";
+    "font-medium py-2 px-4 rounded-lg transition-colors disabled:cursor-not-allowed";
 
   const variants = {
     primary:

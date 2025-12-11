@@ -24,6 +24,16 @@ export interface Quiz {
   questions: QuizQuestion[];
   createdBy: string;
   createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface QuizListItem {
+  id: string;
+  title: string;
+  description?: string;
+  questionCount: number;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface CreateQuizDto {
@@ -31,4 +41,11 @@ export interface CreateQuizDto {
   description?: string;
   timePerQuestion: number;
   questions: Omit<QuizQuestion, "id">[];
+}
+
+export interface UpdateQuizDto {
+  title?: string;
+  description?: string;
+  timePerQuestion?: number;
+  questions?: Omit<QuizQuestion, "id">[];
 }
