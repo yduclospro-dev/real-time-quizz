@@ -1,3 +1,5 @@
+import { ApiResponse } from '../../../backend/src/common/types/api-response';
+
 export type UserRole = "student" | "teacher";
 
 export interface User {
@@ -8,10 +10,7 @@ export interface User {
   role: UserRole;
 }
 
-export interface AuthResponse {
-  user: User;
-  accessToken?: string;
-}
+export type ApiError = ApiResponse<never>;
 
 export interface RegisterDto {
   firstName: string;
@@ -24,10 +23,4 @@ export interface RegisterDto {
 export interface LoginDto {
   email: string;
   password: string;
-}
-
-export interface ApiError {
-  message: string;
-  statusCode?: number;
-  errors?: Record<string, string[]>;
 }

@@ -1,8 +1,124 @@
+'use client';
+
 import Link from "next/link";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
+  const { user, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-lg">Chargement...</div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
+        <nav className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16 items-center">
+              <h1 className="text-xl font-bold text-gray-900">Quiz Real-Time</h1>
+              <div className="flex items-center gap-4">
+                <span className="text-gray-700">
+                  {user.firstName} {user.lastName}
+                </span>
+                <button
+                  onClick={() => logout()}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+                >
+                  Déconnexion
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Bienvenue, {user.firstName} !
+            </h2>
+            <p className="text-xl text-gray-600">
+              {user.role === 'teacher' 
+                ? 'Gérez vos quiz et lancez des sessions en temps réel' 
+                : 'Rejoignez des sessions de quiz et testez vos connaissances'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {user.role === 'teacher' ? (
+              <>
+                <Link
+                  href="/quiz/create"
+                  className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    Créer un quiz
+                  </h3>
+                  <p className="text-gray-600">
+                    Créez de nouveaux quiz avec vos questions personnalisées
+                  </p>
+                </Link>
+                <Link
+                  href="/quiz"
+                  className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    Mes quiz
+                  </h3>
+                  <p className="text-gray-600">
+                    Consultez et gérez tous vos quiz existants
+                  </p>
+                </Link>
+                <Link
+                  href="/sessions"
+                  className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    Sessions actives
+                  </h3>
+                  <p className="text-gray-600">
+                    Lancez et suivez vos sessions de quiz en direct
+                  </p>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/join"
+                  className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    Rejoindre une session
+                  </h3>
+                  <p className="text-gray-600">
+                    Entrez le code pour rejoindre un quiz en temps réel
+                  </p>
+                </Link>
+                <Link
+                  href="/history"
+                  className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                    Mon historique
+                  </h3>
+                  <p className="text-gray-600">
+                    Consultez vos résultats et performances passées
+                  </p>
+                </Link>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100">
       <main className="flex flex-col items-center justify-center gap-8 p-8 text-center">
         <div className="space-y-4">
           <h1 className="text-5xl font-bold text-gray-900">

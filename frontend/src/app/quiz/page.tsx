@@ -110,7 +110,7 @@ export default function QuizListPage() {
             <Button
               variant="primary"
               onClick={() => router.push("/quiz/create")}
-              className="!p-2"
+              className="p-2"
             >
               <Plus className="w-5 h-5" />
             </Button>

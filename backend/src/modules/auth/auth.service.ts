@@ -38,10 +38,16 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userService.findByEmail(email);
-    if (!user) throw new UnauthorizedException('Identifiants invalides');
+    if (!user)
+      throw new UnauthorizedException(
+        "L'email ou le mot de passe est invalide",
+      );
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) throw new UnauthorizedException('Identifiants invalides');
+    if (!ok)
+      throw new UnauthorizedException(
+        "L'email ou le mot de passe est invalide",
+      );
 
     return user;
   }
