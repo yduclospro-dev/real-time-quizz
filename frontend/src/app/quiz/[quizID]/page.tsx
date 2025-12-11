@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Header } from "@/components/layout/Header";
@@ -11,9 +11,16 @@ import QuestionSettingsModal from "@/components/quiz/QuestionSettingsModal";
 import ConfirmDeleteModal from "@/components/quiz/ConfirmDeleteModal";
 import ConfirmExitModal from "@/components/quiz/ConfirmExitModal";
 import { QuizQuestion } from "@/types/quiz.types";
+import { quizService } from "@/services/quiz.service";
+import toast from "react-hot-toast";
 
-export default function CreateQuizPage() {
+export default function QuizEditorPage() {
   const router = useRouter();
+  const params = useParams();
+  const quizID = params.quizID as string;
+  const isCreateMode = quizID === "create";
+
+  const [isLoading, setIsLoading] = useState(!isCreateMode);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [timePerQuestion, setTimePerQuestion] = useState(30);
@@ -39,6 +46,30 @@ export default function CreateQuizPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+
+  // Load quiz data if in edit mode
+  useEffect(() => {
+    if (!isCreateMode) {
+      loadQuiz();
+    }
+  }, [quizID, isCreateMode]);
+
+  const loadQuiz = async () => {
+    try {
+      setIsLoading(true);
+      const quiz = await quizService.getQuizById(quizID);
+      setTitle(quiz.title);
+      setDescription(quiz.description || "");
+      setTimePerQuestion(quiz.timePerQuestion);
+      setQuestions(quiz.questions);
+    } catch (error) {
+      toast.error("Erreur lors du chargement du quiz");
+      console.error("Failed to load quiz:", error);
+      router.push("/quiz");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddQuestion = () => {
     setEditingQuestionIndex(null);
@@ -101,7 +132,7 @@ export default function CreateQuizPage() {
   };
 
   const confirmExit = () => {
-    router.back();
+    router.push("/quiz");
   };
 
   const handleUpdateQuestion = (index: number, updatedQuestion: QuizQuestion) => {
@@ -141,17 +172,42 @@ export default function CreateQuizPage() {
     setDraggedIndex(null);
   };
 
-  const handleSaveQuiz = () => {
-    // TODO: Validate and save to backend
-    console.log({
-      title,
-      description,
-      timePerQuestion,
-      questions,
-    });
-    // For now, just redirect back
-    router.push("/quiz");
+  const handleSaveQuiz = async () => {
+    try {
+      const quizData = {
+        title,
+        description,
+        timePerQuestion,
+        questions: questions.map(q => ({
+          question: q.question,
+          imageUrl: q.imageUrl,
+          type: q.type,
+          answers: q.answers,
+          timeLimit: q.timeLimit,
+        })),
+      };
+
+      if (isCreateMode) {
+        await quizService.createQuiz(quizData);
+        toast.success("Quiz créé avec succès !");
+      } else {
+        await quizService.updateQuiz(quizID, quizData);
+        toast.success("Quiz mis à jour avec succès !");
+      }
+      router.push("/quiz");
+    } catch (error) {
+      toast.error(`Erreur lors de ${isCreateMode ? "la création" : "la mise à jour"} du quiz`);
+      console.error("Failed to save quiz:", error);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+        <div className="text-gray-700">Chargement...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
@@ -169,7 +225,7 @@ export default function CreateQuizPage() {
             Quitter
           </Button>
           <Button onClick={handleSaveQuiz}>
-            Enregistrer
+            {isCreateMode ? "Créer" : "Enregistrer"}
           </Button>
         </div>
       </Header>
