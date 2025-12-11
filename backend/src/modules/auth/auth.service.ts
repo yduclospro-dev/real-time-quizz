@@ -6,8 +6,9 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
-import type { User } from '@prisma/client';
 import { RegisterRequest } from './requests/register.request';
+import { UserDto } from '../../common/types/user-dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +36,7 @@ export class AuthService {
     return user;
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new UnauthorizedException('Identifiants invalides');
 
@@ -45,7 +46,7 @@ export class AuthService {
     return user;
   }
 
-  generateToken(user: User): string {
+  generateToken(user: UserDto): string {
     const payload = { sub: user.id, email: user.email, role: user.role };
     return this.jwtService.sign(payload);
   }
