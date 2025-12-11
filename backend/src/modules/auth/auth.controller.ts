@@ -84,4 +84,10 @@ export class AuthController {
       UserDto.fromEntity(user as User),
     );
   }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response): ApiResponse<null> {
+    res.clearCookie('access_token');
+    return ApiResponse.success('Déconnexion réussie');
+  }
 }

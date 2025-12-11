@@ -18,9 +18,6 @@ export const authService = {
 
   async logout(): Promise<void> {
     await apiClient.post("/auth/logout");
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
-    }
   },
 
   async getCurrentUser(): Promise<ApiResponse<UserDto>> {
