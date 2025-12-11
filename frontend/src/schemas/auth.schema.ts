@@ -9,8 +9,9 @@ export const registerSchema = z.object({
     .pipe(z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "L'email est invalide")),
   password: z
     .string()
-    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
-  role: z.enum(["student", "teacher"], {
+    .min(1, "Le mot de passe est requis")
+    .pipe(z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères")),
+  role: z.enum(["STUDENT", "TEACHER"], {
     message: "Veuillez sélectionner un rôle",
   }),
 });
@@ -20,10 +21,7 @@ export const loginSchema = z.object({
     .string()
     .min(1, "L'email est requis")
     .pipe(z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "L'email est invalide")),
-  password: z
-    .string()
-    .min(1, "Le mot de passe est requis")
-    .pipe(z.string().min(6, "Le mot de passe doit contenir au moins 6 caractères")),
+  password: z.string().min(1, "Le mot de passe est requis"),
 });
 
 export type RegisterFormData = z.infer<typeof registerSchema>;

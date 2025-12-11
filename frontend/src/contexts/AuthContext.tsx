@@ -4,15 +4,15 @@ import { createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
-import { LoginDto, RegisterDto } from '@/types/auth.types';
+import { LoginData, RegisterData } from '@/types/auth.types';
 import toast from 'react-hot-toast';
 import { UserDto } from '../../../backend/src/common/types/user-dto';
 
 interface AuthContextType {
   user: UserDto | null;
   isLoading: boolean;
-  login: (data: LoginDto) => Promise<void>;
-  register: (data: RegisterDto) => Promise<void>;
+  login: (data: LoginData) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -41,9 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (response) => {
-      queryClient.setQueryData(['auth', 'me'], response.data);
-      toast.success('Connexion réussie !');
-      router.push('/');
+      if (response.data) {
+        queryClient.setQueryData(['auth', 'me'], response.data.user);
+        toast.success('Connexion réussie !');
+        router.push('/');
+      }
     },
     onError: (error: unknown) => {
       const message = error && typeof error === 'object' && 'message' in error 
@@ -57,8 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const registerMutation = useMutation({
     mutationFn: authService.register,
     onSuccess: (response) => {
-      queryClient.setQueryData(['auth', 'me'], response.data);
-      toast.success('Inscription réussie !');
+      if (response.data) {
+        queryClient.setQueryData(['auth', 'me'], response.data.user);
+        toast.success('Inscription réussie !');
+        router.push('/');
+      }
     },
     onError: (error: unknown) => {
       const message = error && typeof error === 'object' && 'message' in error 
@@ -84,11 +89,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  const login = async (data: LoginDto) => {
+  const login = async (data: LoginData) => {
     await loginMutation.mutateAsync(data);
   };
 
-  const register = async (data: RegisterDto) => {
+  const register = async (data: RegisterData) => {
     await registerMutation.mutateAsync(data);
   };
 
