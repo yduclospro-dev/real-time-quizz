@@ -40,7 +40,7 @@ export function QuizCard({ quiz, onDelete, onStartSession }: QuizCardProps) {
         </Button>
         <Button
           variant="outline"
-          onClick={() => window.location.href = `/quiz/${quiz.id}/edit`}
+          onClick={() => window.location.href = `/quiz/${quiz.id}`}
           className="flex items-center gap-2"
         >
           <Pencil className="w-4 h-4" />
