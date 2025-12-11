@@ -1,18 +1,23 @@
-import { User } from '@prisma/client';
+import type { User } from '@prisma/client';
 
 export class UserDto {
-  id: number;
+  id: string;
   lastName: string;
   firstName: string;
   email: string;
   role: string;
   createdAt: Date;
-
-  constructor(user: User) {
-    Object.assign(this, user);
-  }
+  password?: string;
 
   static fromEntity(user: User): UserDto {
-    return new UserDto(user);
+    return {
+      id: user.id,
+      lastName: user.lastName,
+      firstName: user.firstName,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt || new Date(),
+      password: user.password || undefined,
+    };
   }
 }

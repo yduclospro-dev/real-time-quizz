@@ -32,6 +32,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           exception.message;
         errors = resp.errors;
       }
+
+      // Personnaliser les messages d'erreur 401
+      if (status === HttpStatus.UNAUTHORIZED && message === 'Unauthorized') {
+        message = 'Authentification requise, veuillez vous connecter';
+      }
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       // Erreurs Prisma connues
       status = HttpStatus.BAD_REQUEST;

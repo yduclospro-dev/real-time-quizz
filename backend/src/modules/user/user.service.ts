@@ -11,14 +11,27 @@ export class UserService {
   }
 
   async create(data: Prisma.UserCreateInput): Promise<User> {
-    return await this.prisma.user.create({ data });
+    const user = await this.prisma.user.create({ data });
+    return user ?? null;
   }
 
-  async findById(id: string): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: { id } });
+  async findById(id: string): Promise<Partial<User> | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        lastName: true,
+        firstName: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+    return user ?? null;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return await this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user ?? null;
   }
 }

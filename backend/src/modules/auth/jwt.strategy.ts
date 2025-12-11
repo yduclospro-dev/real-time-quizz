@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { Request } from 'express';
 import { UserService } from '../user/user.service';
-import { User } from '@prisma/client';
 
 interface JwtPayload {
   sub: string;
@@ -14,12 +14,17 @@ interface JwtPayload {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly userService: UserService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (request: Request) => {
+          return request?.cookies?.access_token;
+        },
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       secretOrKey: process.env.JWT_SECRET || 'dev-secret',
     });
   }
 
-  validate(payload: JwtPayload): Promise<User | null> {
-    return this.userService.findById(payload.sub);
+  validate(payload: JwtPayload) {
+    return payload;
   }
 }
