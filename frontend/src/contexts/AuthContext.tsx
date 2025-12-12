@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,7 +6,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
 import { LoginData, RegisterData } from '@/types/auth.types';
 import toast from 'react-hot-toast';
-import { UserDto } from '../../../backend/src/common/types/user-dto';
+import type { UserDto } from '@shared/types/user-dto';
+import { ApiError } from '@/lib/api-client';
+import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
+import { useGlobalError } from '@/providers/ReactQueryProvider';
+import { useApiMutation } from '@/lib/api-hooks';
 
 interface AuthContextType {
   user: UserDto | null;
@@ -23,6 +27,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
+  const { setFieldErrorsFromApiError } = useFieldErrorContext();
+  const { showError } = useGlobalError();
+
   const { data: user = null, isLoading, refetch } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
@@ -38,8 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Mutation pour le login
-  const loginMutation = useMutation({
-    mutationFn: authService.login,
+  const loginMutation = useApiMutation<any, any> (authService.login, {
     onSuccess: (response) => {
       if (response.data) {
         queryClient.setQueryData(['auth', 'me'], response.data.user);
@@ -47,17 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push('/');
       }
     },
-    onError: (error: unknown) => {
-      const message = error && typeof error === 'object' && 'message' in error 
-        ? String(error.message) 
-        : 'Erreur lors de la connexion';
-      toast.error(message);
-    },
-  });
+  }, { suppressToastOnFieldErrors: true });
 
   // Mutation pour l'inscription
-  const registerMutation = useMutation({
-    mutationFn: authService.register,
+  const registerMutation = useApiMutation<any, any>(authService.register, {
     onSuccess: (response) => {
       if (response.data) {
         queryClient.setQueryData(['auth', 'me'], response.data.user);
@@ -65,27 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.push('/');
       }
     },
-    onError: (error: unknown) => {
-      const message = error && typeof error === 'object' && 'message' in error 
-        ? String(error.message) 
-        : "Erreur lors de l'inscription";
-      toast.error(message);
-    },
-  });
+  }, { suppressToastOnFieldErrors: true });
 
   // Mutation pour la déconnexion
-  const logoutMutation = useMutation({
-    mutationFn: authService.logout,
+  const logoutMutation = useApiMutation<any, any>(authService.logout, {
     onSuccess: () => {
       queryClient.setQueryData(['auth', 'me'], null);
       queryClient.clear();
       toast.success('Déconnexion réussie !');
-    },
-    onError: (error: unknown) => {
-      const message = error && typeof error === 'object' && 'message' in error 
-        ? String(error.message) 
-        : 'Erreur lors de la déconnexion';
-      toast.error(message);
     },
   });
 
@@ -98,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await logoutMutation.mutateAsync();
+    await logoutMutation.mutateAsync(undefined);
   };
 
   const checkAuth = async () => {

@@ -1,5 +1,5 @@
 import { Question } from '@prisma/client';
-import { QuestionType } from '../../../../shared/enums/question-type';
+import { QuestionType } from '@shared/enums/question-type';
 import { AnswerDto, answerToDto } from './answer-dto';
 
 export interface QuestionDto {

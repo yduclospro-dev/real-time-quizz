@@ -1,5 +1,5 @@
-import { ApiResponse } from '../../../backend/src/common/types/api-response';
-import { Role } from '../../../shared/enums/role';
+import type { ApiResponse } from '@shared/types/api-response';
+import { Role } from '@shared/enums/role';
 
 export type ApiError = ApiResponse<never>;
 
