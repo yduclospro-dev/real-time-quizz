@@ -38,7 +38,7 @@ export default function QuestionSidebar({
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
       onScrollComplete?.();
     }
-  }, [shouldScrollToBottom, questions.length]);
+  }, [shouldScrollToBottom, questions.length, onScrollComplete]);
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 flex flex-col max-h-[calc(100vh-12rem)]">
       <h3 className="font-semibold text-gray-900 mb-4">Questions</h3>

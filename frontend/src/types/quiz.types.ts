@@ -9,18 +9,19 @@ export interface QuizQuestion {
   timeLimit: number; // in seconds
 }
 
+import type { AnswerColor } from '@shared/types/answer-color';
+
 export interface QuizAnswer {
   id: string;
   text: string;
   isCorrect: boolean;
-  color: "red" | "blue" | "yellow" | "green" | "purple" | "orange";
+  color: AnswerColor;
 }
 
 export interface Quiz {
   id: string;
   title: string;
   description?: string;
-  timePerQuestion: number; // default time for all questions
   questions: QuizQuestion[];
   createdBy: string;
   createdAt: Date;
@@ -39,13 +40,11 @@ export interface QuizListItem {
 export interface CreateQuizDto {
   title: string;
   description?: string;
-  timePerQuestion: number;
   questions: Omit<QuizQuestion, "id">[];
 }
 
 export interface UpdateQuizDto {
   title?: string;
   description?: string;
-  timePerQuestion?: number;
   questions?: Omit<QuizQuestion, "id">[];
 }

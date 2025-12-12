@@ -7,7 +7,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = ({ label, error, className = '', ...props }: InputProps) => {
-  const fieldError = props.name ? useFieldError(String(props.name)) : undefined;
+  const fieldError = useFieldError(props.name ? String(props.name) : undefined);
   const finalError = error ?? fieldError;
   return (
     <div>

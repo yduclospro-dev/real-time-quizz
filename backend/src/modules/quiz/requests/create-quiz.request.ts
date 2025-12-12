@@ -10,6 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { QuestionType } from '@prisma/client';
+import { IsInt, Min, Max } from 'class-validator';
 
 export class CreateAnswerRequest {
   @IsString({
@@ -45,6 +46,12 @@ export class CreateQuestionRequest {
   @ValidateNested({ each: true })
   @Type(() => CreateAnswerRequest)
   answers!: CreateAnswerRequest[];
+
+  @IsOptional()
+  @IsInt({ message: 'timeLimit doit être un entier (secondes)' })
+  @Min(5, { message: 'Le timeLimit minimal est de 5 secondes' })
+  @Max(3600, { message: 'Le timeLimit maximal est de 3600 secondes' })
+  timeLimit?: number;
 }
 
 export class CreateQuizRequest {

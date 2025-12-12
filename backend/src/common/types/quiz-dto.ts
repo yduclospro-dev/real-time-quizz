@@ -1,4 +1,4 @@
-import { Quiz } from '@prisma/client';
+import { Quiz, Question } from '@prisma/client';
 import { QuestionDto, questionToDto } from './question-dto';
 
 export interface QuizDto {
@@ -9,7 +9,7 @@ export interface QuizDto {
   questions: QuestionDto[];
 }
 
-export const quizToDto = (entity: Quiz & { questions: any[] }): QuizDto => ({
+export const quizToDto = (entity: Quiz & { questions: Question[] }): QuizDto => ({
   id: entity.id,
   title: entity.title,
   authorId: entity.authorId,

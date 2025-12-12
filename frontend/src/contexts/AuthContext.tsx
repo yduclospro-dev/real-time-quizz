@@ -2,14 +2,12 @@
 
 import { createContext, useContext, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
 import { LoginData, RegisterData } from '@/types/auth.types';
 import toast from 'react-hot-toast';
 import type { UserDto } from '@shared/types/user-dto';
-import { ApiError } from '@/lib/api-client';
 import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
-import { useGlobalError } from '@/providers/ReactQueryProvider';
 import { useApiMutation } from '@/lib/api-hooks';
 
 interface AuthContextType {
@@ -27,8 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { setFieldErrorsFromApiError } = useFieldErrorContext();
-  const { showError } = useGlobalError();
+  useFieldErrorContext();
 
   const { data: user = null, isLoading, refetch } = useQuery({
     queryKey: ['auth', 'me'],
@@ -45,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Mutation pour le login
-  const loginMutation = useApiMutation<any, any> (authService.login, {
+  const loginMutation = useApiMutation<LoginData, Awaited<ReturnType<typeof authService.login>>>(authService.login, {
     onSuccess: (response) => {
       if (response.data) {
         queryClient.setQueryData(['auth', 'me'], response.data.user);
@@ -56,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, { suppressToastOnFieldErrors: true });
 
   // Mutation pour l'inscription
-  const registerMutation = useApiMutation<any, any>(authService.register, {
+  const registerMutation = useApiMutation<RegisterData, Awaited<ReturnType<typeof authService.register>>>(authService.register, {
     onSuccess: (response) => {
       if (response.data) {
         queryClient.setQueryData(['auth', 'me'], response.data.user);
@@ -67,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, { suppressToastOnFieldErrors: true });
 
   // Mutation pour la déconnexion
-  const logoutMutation = useApiMutation<any, any>(authService.logout, {
+  const logoutMutation = useApiMutation<void, Awaited<ReturnType<typeof authService.logout>>>(authService.logout, {
     onSuccess: () => {
       queryClient.setQueryData(['auth', 'me'], null);
       queryClient.clear();

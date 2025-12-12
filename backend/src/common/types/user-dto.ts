@@ -1,6 +1,7 @@
 import { User, Role as PrismaRole } from '@prisma/client';
 import { Role } from '@shared/enums/role';
 import type { UserDto } from '@shared/types/user-dto';
+export type { UserDto } from '@shared/types/user-dto';
 
 export const userToDto = (entity: User): UserDto => ({
   id: entity.id,
