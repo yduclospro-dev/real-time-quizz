@@ -55,6 +55,7 @@ export class AuthController {
       request.email,
       request.password,
     );
+
     const token = this.authService.generateToken(user);
 
     res.cookie('access_token', token, {
