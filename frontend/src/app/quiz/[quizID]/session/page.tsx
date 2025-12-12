@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { StudentQuestionView } from "@/components/session/StudentQuestionView";
 import { TeacherQuestionView } from "@/components/session/TeacherQuestionView";
 import { QuestionResults } from "@/components/session/QuestionResults";
+import TeacherQuestionResults from "@/components/session/TeacherQuestionResults";
+import { ConfirmQuitSessionModal } from "@/components/session/ConfirmQuitSessionModal";
 import { QuizQuestion } from "@/types/quiz.types";
 import toast from "react-hot-toast";
 
@@ -43,14 +45,30 @@ export default function SessionPage() {
   
   // Teacher state
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswer[]>([]);
+  const [studentResults, setStudentResults] = useState<
+    Array<{
+      studentName: string;
+      selectedAnswers: string[];
+      isCorrect: boolean;
+      answeredInTime: boolean;
+    }>
+  >([]);
   
   // Results
   const [finalResults, setFinalResults] = useState<FinalResult[]>([]);
   const [userScore, setUserScore] = useState(0);
+  
+  // Quit modal
+  const [showQuitModal, setShowQuitModal] = useState(false);
+  
+  // Pause timer (between questions)
+  const [pauseTimeLeft, setPauseTimeLeft] = useState(10);
 
   useEffect(() => {
-    // TODO: Connect to WebSocket
-    // TODO: Load session data
+    // TODO BACKEND: Connect to WebSocket
+    // TODO BACKEND: Emit JOIN_SESSION event with sessionId
+    // TODO BACKEND: Listen for PARTICIPANT_JOINED, QUIZ_STARTED, QUESTION_START, etc.
+    // See: /mocks/sessionMockData.ts for WebSocket event structure
     loadSession();
   }, [quizID]);
 
@@ -62,33 +80,41 @@ export default function SessionPage() {
       handleQuestionTimeout();
     }
   }, [sessionState, timeLeft]);
+  
+  useEffect(() => {
+    if (sessionState === "between-questions" && pauseTimeLeft > 0) {
+      const timer = setTimeout(() => setPauseTimeLeft(pauseTimeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [sessionState, pauseTimeLeft]);
 
   const loadSession = async () => {
     try {
-      // TODO: Fetch session from backend
-      // For now, mock data
-      setSessionCode("ABC123");
-      setParticipants(["Jean Dupont", "Marie Martin"]);
+      // TODO BACKEND: GET /api/sessions/:sessionId
+      // Expected response: { sessionId, sessionCode, quizId, participants[], questions[], state }
+      // For now, using mock data from /mocks/sessionMockData.ts
       
-      // Mock questions
-      setQuestions([
-        {
-          id: "1",
-          question: "Quelle est la capitale de la France ?",
-          type: "single",
-          timeLimit: 30,
-          answers: [
-            { id: "1", text: "Paris", isCorrect: true, color: "red" },
-            { id: "2", text: "Lyon", isCorrect: false, color: "blue" },
-            { id: "3", text: "Marseille", isCorrect: false, color: "yellow" },
-            { id: "4", text: "Toulouse", isCorrect: false, color: "green" },
-          ],
-        },
-      ]);
+      const { MOCK_SESSION, MOCK_QUIZ_QUESTIONS } = await import("@/mocks/sessionMockData");
+      setSessionCode(MOCK_SESSION.sessionCode);
+      setParticipants(MOCK_SESSION.participants);
+      setQuestions(MOCK_QUIZ_QUESTIONS);
     } catch (error) {
       toast.error("Erreur lors du chargement de la session");
       console.error("Failed to load session:", error);
       router.push("/quiz");
+    }
+  };
+  
+  const handleQuitSession = () => {
+    setShowQuitModal(true);
+  };
+  
+  const handleConfirmQuit = () => {
+    // TODO BACKEND: Emit LEAVE_SESSION WebSocket event
+    if (isTeacher) {
+      router.push("/quiz");
+    } else {
+      router.push("/join");
     }
   };
 
@@ -97,7 +123,9 @@ export default function SessionPage() {
       toast.error("Aucun étudiant n'a rejoint la session");
       return;
     }
-    // TODO: Send start event via WebSocket
+    // TODO BACKEND: Emit START_QUIZ WebSocket event
+    // Server should broadcast QUIZ_STARTED to all participants
+    // See: /mocks/sessionMockData.ts for event structure
     setSessionState("in-progress");
     setTimeLeft(questions[0]?.timeLimit || 30);
     toast.success("Quiz démarré !");
@@ -116,32 +144,62 @@ export default function SessionPage() {
           : [...prev, answerId]
       );
     }
-    // TODO: Send answer to WebSocket
+    // TODO BACKEND: Emit SUBMIT_ANSWER WebSocket event
+    // Event data: { questionId, selectedAnswers: string[] }
+    // Teacher should receive ANSWER_RECEIVED event for real-time stats
   };
 
   const handleQuestionTimeout = () => {
-    // TODO: Send final answers via WebSocket
-    setSessionState("between-questions");
+    // TODO BACKEND: Server should automatically handle question timeout
+    // Server broadcasts QUESTION_END event with correct answers and all student results
+    // Then after 5s, broadcasts QUESTION_START for next question or QUIZ_END
     
-    // Auto-advance to next question after 5 seconds
+    // Calculate student results (check if answers are correct)
+    const currentQuestion = questions[currentQuestionIndex];
+    const correctAnswerIds = currentQuestion.answers
+      .filter((a) => a.isCorrect)
+      .map((a) => a.id);
+    
+    // TODO BACKEND: Receive student results from server
+    // For now, using mock data
+    import("@/mocks/sessionMockData").then(({ MOCK_STUDENT_ANSWERS }) => {
+      const results = MOCK_STUDENT_ANSWERS.map((student) => {
+        const isCorrect =
+          student.selectedAnswers.length === correctAnswerIds.length &&
+          student.selectedAnswers.every((id) => correctAnswerIds.includes(id));
+        return {
+          studentName: student.studentName,
+          selectedAnswers: student.selectedAnswers,
+          isCorrect,
+          answeredInTime: true,
+        };
+      });
+      setStudentResults(results);
+    });
+    
+    setSessionState("between-questions");
+    setPauseTimeLeft(10);
+    
+    // Mock: Auto-advance to next question after 10 seconds
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setSelectedAnswers([]);
         setStudentAnswers([]);
+        setStudentResults([]);
         setTimeLeft(questions[currentQuestionIndex + 1]?.timeLimit || 30);
         setSessionState("in-progress");
       } else {
         // Quiz finished
         setSessionState("finished");
-        // TODO: Calculate final results
-        setFinalResults([
-          { studentName: "Jean Dupont", score: 8, totalQuestions: 10 },
-          { studentName: "Marie Martin", score: 9, totalQuestions: 10 },
-        ].sort((a, b) => a.studentName.localeCompare(b.studentName)));
+        // TODO BACKEND: Receive QUIZ_END event with final results
+        // For now, using mock data
+        import("@/mocks/sessionMockData").then(({ MOCK_FINAL_RESULTS }) => {
+          setFinalResults(MOCK_FINAL_RESULTS);
+        });
         setUserScore(7);
       }
-    }, 5000);
+    }, 10000);
   };
 
   const copySessionCode = () => {
@@ -153,7 +211,7 @@ export default function SessionPage() {
   if (sessionState === "lobby") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-        <Header title={isTeacher ? "Session - En attente" : "En attente du professeur"} />
+        <Header title={isTeacher ? "Session - En attente" : "En attente du professeur"} onQuit={handleQuitSession} />
 
         <div className="max-w-4xl mx-auto px-4 py-8">
           {/* Session Code Card */}
@@ -214,11 +272,21 @@ export default function SessionPage() {
 
           {/* Waiting Message (Student) */}
           {!isTeacher && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
-              <p className="text-blue-800 font-medium">
-                En attente du démarrage par le professeur...
-              </p>
-            </div>
+            <>
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center mb-4">
+                <p className="text-blue-800 font-medium">
+                  En attente du démarrage par le professeur...
+                </p>
+              </div>
+              {/* TODO: Remove this test button before production */}
+              <Button
+                variant="outline"
+                onClick={handleStartQuiz}
+                className="w-full"
+              >
+                [TEST] Démarrer quand même
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -231,7 +299,7 @@ export default function SessionPage() {
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-        <Header title={`Question ${currentQuestionIndex + 1}/${questions.length}`} />
+        <Header title={`Question ${currentQuestionIndex + 1}/${questions.length}`} onQuit={handleQuitSession} />
         <div className="max-w-6xl mx-auto px-4 py-8">
           {isTeacher ? (
             <TeacherQuestionView
@@ -263,14 +331,26 @@ export default function SessionPage() {
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-        <Header title="Résultat" />
+        <Header title="Résultat" onQuit={handleQuitSession} />
         <div className="max-w-4xl mx-auto px-4 py-8">
-          <QuestionResults
-            question={currentQuestion}
-            questionNumber={currentQuestionIndex + 1}
-            userAnswers={!isTeacher ? selectedAnswers : undefined}
-            isTeacher={isTeacher}
-          />
+          {isTeacher ? (
+            <TeacherQuestionResults
+              question={currentQuestion}
+              questionNumber={currentQuestionIndex + 1}
+              studentResults={studentResults}
+              pauseTimeLeft={pauseTimeLeft}
+              isLastQuestion={currentQuestionIndex === questions.length - 1}
+            />
+          ) : (
+            <QuestionResults
+              question={currentQuestion}
+              questionNumber={currentQuestionIndex + 1}
+              userAnswers={selectedAnswers}
+              isTeacher={false}
+              pauseTimeLeft={pauseTimeLeft}
+              isLastQuestion={currentQuestionIndex === questions.length - 1}
+            />
+          )}
         </div>
       </div>
     );
@@ -280,7 +360,7 @@ export default function SessionPage() {
   if (sessionState === "finished") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-        <Header title="Quiz terminé" />
+        <Header title="Quiz terminé" onQuit={handleQuitSession} />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
@@ -288,12 +368,94 @@ export default function SessionPage() {
             </h2>
 
             {!isTeacher && (
-              <div className="mb-8 p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-center">
-                <p className="text-white text-lg mb-2">Votre score</p>
-                <p className="text-5xl font-bold text-white">
-                  {userScore}/{questions.length}
-                </p>
-              </div>
+              <>
+                <div className="mb-8 p-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl text-center">
+                  <p className="text-white text-lg mb-2">Votre score</p>
+                  <p className="text-5xl font-bold text-white">
+                    {userScore}/{questions.length}
+                  </p>
+                </div>
+
+                {/* Detailed results for each question */}
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-6">Récapitulatif</h3>
+                  {questions.map((question, index) => {
+                    // TODO BACKEND: Get actual student answers from session data
+                    // For now, using mock data - assuming student selected first answer
+                    const studentAnswers = index === 0 ? ["1"] : [];
+                    const correctAnswerIds = question.answers
+                      .filter((a) => a.isCorrect)
+                      .map((a) => a.id);
+                    const isCorrect =
+                      studentAnswers.length === correctAnswerIds.length &&
+                      studentAnswers.every((id) => correctAnswerIds.includes(id));
+
+                    return (
+                      <div
+                        key={question.id}
+                        className={`rounded-xl p-5 ${
+                          isCorrect ? "bg-green-50" : "bg-red-50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          {/* Status Icon */}
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              isCorrect ? "bg-green-500" : "bg-red-500"
+                            }`}
+                          >
+                            <span className="text-white font-bold text-lg">
+                              {isCorrect ? "✓" : "✗"}
+                            </span>
+                          </div>
+
+                          <div className="flex-1">
+                            {/* Question */}
+                            <div className="mb-4">
+                              <h4 className="text-sm font-semibold text-gray-500 mb-2">
+                                Question {index + 1}
+                              </h4>
+                              <p className="text-gray-900 font-medium">{question.question}</p>
+                            </div>
+
+                            {/* Answers */}
+                            <div className="space-y-2">
+                              {/* Student's answer */}
+                              <div className="flex items-start gap-2">
+                                <span className="text-sm font-semibold text-gray-700 min-w-[120px]">
+                                  Votre réponse:
+                                </span>
+                                <span className={`text-sm ${isCorrect ? "text-green-700 font-medium" : "text-gray-900"}`}>
+                                  {studentAnswers.length > 0
+                                    ? studentAnswers
+                                        .map((id) => question.answers.find((a) => a.id === id)?.text)
+                                        .join(", ")
+                                    : "Pas de réponse"}
+                                </span>
+                              </div>
+
+                              {/* Correct answer - only show if incorrect */}
+                              {!isCorrect && (
+                                <div className="flex items-start gap-2">
+                                  <span className="text-sm font-semibold text-green-700 min-w-[120px]">
+                                    Bonne réponse:
+                                  </span>
+                                  <span className="text-sm text-green-700 font-medium">
+                                    {question.answers
+                                      .filter((a) => a.isCorrect)
+                                      .map((a) => a.text)
+                                      .join(", ")}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
 
             {isTeacher && (
@@ -333,9 +495,22 @@ export default function SessionPage() {
             </Button>
           </div>
         </div>
+        <ConfirmQuitSessionModal
+          isOpen={showQuitModal}
+          onClose={() => setShowQuitModal(false)}
+          onConfirm={handleConfirmQuit}
+        />
       </div>
     );
   }
 
-  return null;
+  return (
+    <>
+      <ConfirmQuitSessionModal
+        isOpen={showQuitModal}
+        onClose={() => setShowQuitModal(false)}
+        onConfirm={handleConfirmQuit}
+      />
+    </>
+  );
 }
