@@ -47,6 +47,8 @@ model Question {
   text      String
   type      QuestionType
   image     String? 
+  // time limit for the question in seconds (default: 30)
+  timeLimit Int @default(30)
   quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   quizId    String
   createdAt DateTime @default(now())

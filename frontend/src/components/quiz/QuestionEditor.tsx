@@ -2,6 +2,7 @@
 
 import { Trash2, Image, Clock } from "lucide-react";
 import { QuizQuestion, QuizAnswer } from "@/types/quiz.types";
+import { useId, useRef } from "react";
 import AnswerCard from "./AnswerCard";
 
 interface QuestionEditorProps {
@@ -47,13 +48,16 @@ export default function QuestionEditor({
     }
   };
 
+  const reactId = useId();
+  const localCounter = useRef(0);
+
   const handleAddAnswer = () => {
     if (question.answers.length >= 6) return;
     const colors = ["red", "blue", "yellow", "green", "purple", "orange"] as const;
     const colorIndex = question.answers.length % colors.length;
 
     const newAnswer: QuizAnswer = {
-      id: Date.now().toString(),
+      id: `${reactId}-${localCounter.current++}`.replace(/[:]/g, ""),
       text: "",
       isCorrect: false,
       color: colors[colorIndex],
@@ -123,7 +127,7 @@ export default function QuestionEditor({
           className="flex items-center justify-center h-72 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors"
         >
           <div className="flex flex-col items-center justify-center text-center">
-            <Image className="w-12 h-12 mb-3 text-gray-400" />
+            <Image className="w-12 h-12 mb-3 text-gray-400" aria-hidden="true" />
             <p className="text-sm text-gray-500 mb-2">Rechercher et insérer une image</p>
             <p className="text-xs text-gray-400">Télécharger un fichier ou glisser-déposer ici</p>
           </div>

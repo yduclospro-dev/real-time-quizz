@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Role } from "@shared/enums/role";
 
 export default function Home() {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (

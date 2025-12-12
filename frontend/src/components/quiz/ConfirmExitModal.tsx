@@ -22,7 +22,7 @@ export default function ConfirmExitModal({
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={onClose}>
-            Continuer l'édition
+            Continuer l&apos;édition
           </Button>
           <Button onClick={onConfirm} className="bg-red-500 hover:bg-red-600">
             Quitter

@@ -20,15 +20,14 @@ export const useGlobalError = () => {
 };
 
 export function ReactQueryProvider({ children }: { children: ReactNode }) {
-  const [toastError, setToastError] = useState<ApiError | null>(null);
 
   const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: ( {
+    defaultOptions: {
       queries: {
         staleTime: 60 * 1000, // 1 minute
         refetchOnWindowFocus: false,
       },
-    } as any ),
+    },
   }));
 
   const showError = (e: ApiError) => {
@@ -43,14 +42,8 @@ export function ReactQueryProvider({ children }: { children: ReactNode }) {
       queries: {
         staleTime: 60 * 1000,
         refetchOnWindowFocus: false,
-        onError: (err: unknown) => {
-          try {
-            const e = err as ApiError;
-            if (e) showError(e);
-          } catch {}
-        },
       },
-    } as any);
+    });
   }, [queryClient]);
 
   return (

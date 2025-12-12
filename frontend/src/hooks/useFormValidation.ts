@@ -1,6 +1,6 @@
 import { ZodSchema } from "zod";
 
-export const useFormValidation = <T extends Record<string, any>>(
+export const useFormValidation = <T extends Record<string, unknown>>(
   schema: ZodSchema<T>
 ) => {
   const validate = (data: T): { isValid: boolean; errors: Partial<Record<keyof T, string>> } => {

@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { loginSchema, LoginFormData } from "@/schemas/auth.schema";
 import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
+import type { ApiError } from '@/lib/api-client';
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
@@ -45,10 +46,10 @@ export default function LoginPage() {
     setErrors({});
     try {
       await login(formData);
-    } catch (err: any) {
-      // err should be ApiError from api-client
-      if (err?.details) {
-        setFieldErrorsFromApiError(err);
+    } catch (err: unknown) {
+      const maybeApiError = err as ApiError;
+      if (maybeApiError?.details) {
+        setFieldErrorsFromApiError(maybeApiError);
       }
 
       // global toast is handled by useApiMutation; nothing to do here

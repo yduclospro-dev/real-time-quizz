@@ -21,9 +21,11 @@ export default function Modal({
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
+    let raf = 0 as number;
     if (isOpen) {
-      setIsAnimating(true);
+      raf = requestAnimationFrame(() => setIsAnimating(true));
     }
+    return () => cancelAnimationFrame(raf);
   }, [isOpen]);
 
   if (!isOpen && !isAnimating) return null;

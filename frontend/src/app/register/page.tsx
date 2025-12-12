@@ -10,6 +10,7 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { registerSchema, RegisterFormData } from "@/schemas/auth.schema";
 import { Role } from "@shared/enums/role";
 import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
+import type { ApiError } from '@/lib/api-client';
 
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "Élève" },
@@ -60,9 +61,10 @@ export default function RegisterPage() {
         ...formData,
         role: formData.role as Role,
       });
-    } catch (err: any) {
-      if (err?.details) {
-        setFieldErrorsFromApiError(err);
+    } catch (err: unknown) {
+      const maybeApiError = err as ApiError;
+      if (maybeApiError?.details) {
+        setFieldErrorsFromApiError(maybeApiError);
       }
       // global toast is handled by useApiMutation; nothing to do here
     }

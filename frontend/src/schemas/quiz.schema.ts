@@ -23,7 +23,6 @@ export const quizQuestionSchema = z.object({
 export const createQuizSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().optional(),
-  timePerQuestion: z.number().min(5, "Minimum 5 secondes").max(300, "Maximum 300 secondes"),
   questions: z
     .array(quizQuestionSchema)
     .min(1, "Au moins une question est requise"),

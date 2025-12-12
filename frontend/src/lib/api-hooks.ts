@@ -19,26 +19,35 @@ export const useApiMutation = <TArgs, TData, TError = ApiError, TContext = unkno
   const { setFieldErrorsFromApiError } = useFieldErrorContext();
   const { showError } = useGlobalError();
 
-  return useMutation<TData, TError, TArgs, TContext>({
+  const onErrorWrapper = (error: TError, variables: TArgs | undefined, context: TContext | undefined) => {
+    const unknownErr = error as unknown;
+    // populate field errors if present
+    try {
+      if ((unknownErr as ApiError)?.details) setFieldErrorsFromApiError(unknownErr as ApiError);
+    } catch {}
+
+    // Show global toast depending on config. If suppressToastOnFieldErrors is true
+    // and there are field details, skip showing the toast.
+    try {
+      const hasFieldDetails = !!(unknownErr as ApiError)?.details;
+      const suppress = config?.suppressToastOnFieldErrors ?? true;
+      if (!(suppress && hasFieldDetails)) {
+        showError(unknownErr as ApiError);
+      }
+    } catch {}
+
+    try {
+      // React Query's onError may expect up to 4 args; provide undefined for the fourth.
+      // Casts localized here to satisfy the type system for upstream handlers.
+      (options?.onError as unknown as (...args: unknown[]) => unknown)?.(error, variables, context, undefined);
+    } catch {}
+  };
+
+  const finalOptions: UseMutationOptions<TData, TError, TArgs, TContext> = {
+    ...(options ?? {}),
     mutationFn,
-    ...(options as any),
-    onError: (error: any, variables: TArgs | undefined, context: TContext | undefined) => {
-      // populate field errors if present
-      try {
-        if (error?.details) setFieldErrorsFromApiError(error as ApiError);
-      } catch {}
+    onError: onErrorWrapper,
+  };
 
-      // Show global toast depending on config. If suppressToastOnFieldErrors is true
-      // and there are field details, skip showing the toast.
-      try {
-        const hasFieldDetails = !!error?.details;
-        const suppress = config?.suppressToastOnFieldErrors ?? true;
-        if (!(suppress && hasFieldDetails)) {
-          showError(error as ApiError);
-        }
-      } catch {}
-
-      (options as any)?.onError?.(error as TError, variables, context);
-    },
-  } as any);
+  return useMutation<TData, TError, TArgs, TContext>(finalOptions);
 };

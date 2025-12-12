@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { useAuth } from '@/hooks/useAuth';
 
-export function Header({ title, children, showUser = true }: { title?: string; children?: React.ReactNode; showUser?: boolean }) {
+export function Header({ title, showUser = true }: { title?: string; children?: React.ReactNode; showUser?: boolean }) {
   const { user, logout, isLoading } = useAuth();
 
   return (
@@ -27,7 +27,7 @@ export function Header({ title, children, showUser = true }: { title?: string; c
           ) : (
             <div className="flex items-center gap-4">
               <a href="/login" className="text-sm text-blue-600 hover:underline">Se connecter</a>
-              <a href="/register" className="text-sm text-blue-600 hover:underline">S'inscrire</a>
+              <a href="/register" className="text-sm text-blue-600 hover:underline">S&apos;inscrire</a>
             </div>
           ))}
         </div>

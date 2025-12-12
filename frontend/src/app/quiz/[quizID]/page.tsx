@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useRef, useEffect, startTransition } from "react";
+import { useQuizEditor } from '@/hooks/useQuizEditor';
+import { useParams } from "next/navigation";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useApiMutation } from '@/lib/api-hooks';
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import QuestionSidebar from "@/components/quiz/QuestionSidebar";
@@ -9,204 +13,135 @@ import QuestionEditor from "@/components/quiz/QuestionEditor";
 import QuestionSettingsModal from "@/components/quiz/QuestionSettingsModal";
 import ConfirmDeleteModal from "@/components/quiz/ConfirmDeleteModal";
 import ConfirmExitModal from "@/components/quiz/ConfirmExitModal";
-import { QuizQuestion } from "@/types/quiz.types";
+import { UpdateQuizDto, Quiz } from "@/types/quiz.types";
 import { quizService } from "@/services/quiz.service";
 import toast from "react-hot-toast";
+import type { ApiError } from '@/lib/api-client';
 
 export default function QuizEditorPage() {
-  const router = useRouter();
   const params = useParams();
   const quizID = params.quizID as string;
-  const isCreateMode = quizID === "create";
 
-  const [isLoading, setIsLoading] = useState(!isCreateMode);
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [timePerQuestion, setTimePerQuestion] = useState(30);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([
-    {
-      id: "1",
-      question: "",
-      type: "single",
-      timeLimit: 30,
-      answers: [
-        { id: "1", text: "", isCorrect: false, color: "red" },
-        { id: "2", text: "", isCorrect: false, color: "blue" },
-        { id: "3", text: "", isCorrect: false, color: "yellow" },
-        { id: "4", text: "", isCorrect: false, color: "green" },
-      ],
-    },
-  ]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null);
-  const [isExitModalOpen, setIsExitModalOpen] = useState(false);
+  
+  // Per-question timeLimit is stored on each question; editor hook will manage state
+
+  // Editor must be initialized before fetching so we can set questions on success
+  const editor = useQuizEditor();
+  const {
+    questions,
+    setQuestions,
+    currentQuestionIndex,
+    setCurrentQuestionIndex,
+    isModalOpen,
+    setIsModalOpen,
+    editingQuestionIndex,
+    handleAddQuestion,
+    handleEditQuestionSettings,
+    handleConfirmQuestionSettings,
+    handleDeleteQuestion,
+    confirmDeleteQuestion,
+    handleExit,
+    confirmExit,
+    handleUpdateQuestion,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    shouldScrollToBottom,
+    setShouldScrollToBottom,
+    draggedIndex,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    questionToDelete,
+    isExitModalOpen,
+    setIsExitModalOpen,
+  } = editor;
 
   // Load quiz data if in edit mode
+  const queryClient = useQueryClient();
+
+  const initRef = useRef(false);
+  const queryResult = useQuery<Quiz | undefined, ApiError>({
+    queryKey: ['quiz', quizID],
+    queryFn: () => quizService.getQuizById(quizID),
+    retry: false,
+    enabled: !!quizID,
+  });
+
+  const { data: quizData, isLoading: isQueryLoading, isError: isQueryError, error: queryError } = queryResult;
+
   useEffect(() => {
-    if (!isCreateMode) {
-      loadQuiz();
+    if (!initRef.current && quizData) {
+      console.log('Loaded quiz data (effect):', quizData);
+      startTransition(() => {
+        setTitle(quizData.title ?? '');
+        setQuestions(quizData.questions ?? []);
+        setCurrentQuestionIndex(0);
+        initRef.current = true;
+      });
     }
-  }, [quizID, isCreateMode]);
+  }, [quizData, setQuestions, setCurrentQuestionIndex]);
 
-  const loadQuiz = async () => {
-    try {
-      setIsLoading(true);
-      const quiz = await quizService.getQuizById(quizID);
-      setTitle(quiz.title);
-      setDescription(quiz.description || "");
-      setTimePerQuestion(quiz.timePerQuestion);
-      setQuestions(quiz.questions);
-    } catch (error) {
-      toast.error("Erreur lors du chargement du quiz");
-      console.error("Failed to load quiz:", error);
-      router.push("/quiz");
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (queryError) {
+      console.error('Failed to load quiz (effect)', queryError);
+      try {
+        if (queryError?.message) toast.error(queryError.message);
+        else toast.error('Erreur lors du chargement du quiz');
+      } catch {}
     }
-  };
+  }, [queryError]);
 
-  const handleAddQuestion = () => {
-    setEditingQuestionIndex(null);
-    setIsModalOpen(true);
-  };
+  const router = useRouter();
 
-  const handleEditQuestionSettings = (index: number) => {
-    setEditingQuestionIndex(index);
-    setIsModalOpen(true);
-  };
-
-  const handleConfirmQuestionSettings = (type: "single" | "multiple", timeLimit: number) => {
-    if (editingQuestionIndex !== null) {
-      // Edit existing question
-      const updatedQuestions = [...questions];
-      updatedQuestions[editingQuestionIndex] = {
-        ...updatedQuestions[editingQuestionIndex],
-        type,
-        timeLimit,
-      };
-      setQuestions(updatedQuestions);
-    } else {
-      // Add new question
-      const newQuestion: QuizQuestion = {
-        id: Date.now().toString(),
-        question: "",
-        type,
-        timeLimit,
-        answers: [
-          { id: Date.now().toString(), text: "", isCorrect: false, color: "red" },
-          { id: (Date.now() + 1).toString(), text: "", isCorrect: false, color: "blue" },
-          { id: (Date.now() + 2).toString(), text: "", isCorrect: false, color: "yellow" },
-          { id: (Date.now() + 3).toString(), text: "", isCorrect: false, color: "green" },
-        ],
-      };
-      setQuestions([...questions, newQuestion]);
-      setCurrentQuestionIndex(questions.length);
-      setShouldScrollToBottom(true);
+  useEffect(() => {
+    if (isQueryError) {
+      try {
+        const status = (queryError as ApiError | undefined)?.status;
+        if (status === 401) {
+          router.push('/login');
+        }
+      } catch {
+        // ignore
+      }
     }
-  };
+  }, [isQueryError, queryError, router]);
 
-  const handleDeleteQuestion = (index: number) => {
-    if (questions.length === 1) return;
-    setQuestionToDelete(index);
-    setIsDeleteModalOpen(true);
-  };
+  
 
-  const confirmDeleteQuestion = () => {
-    if (questionToDelete === null) return;
-    const newQuestions = questions.filter((_, i) => i !== questionToDelete);
-    setQuestions(newQuestions);
-    if (currentQuestionIndex >= newQuestions.length) {
-      setCurrentQuestionIndex(newQuestions.length - 1);
-    }
-    setQuestionToDelete(null);
-  };
+  const updateMutation = useApiMutation<
+    { id: string; data: UpdateQuizDto },
+    Awaited<ReturnType<typeof quizService.updateQuiz>>
+  >(({ id, data }) => quizService.updateQuiz(id, data), {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quizzes'] });
+      queryClient.invalidateQueries({ queryKey: ['quiz', quizID] });
+    },
+  });
 
-  const handleExit = () => {
-    setIsExitModalOpen(true);
-  };
-
-  const confirmExit = () => {
-    router.push("/quiz");
-  };
-
-  const handleUpdateQuestion = (index: number, updatedQuestion: QuizQuestion) => {
-    const newQuestions = [...questions];
-    newQuestions[index] = updatedQuestion;
-    setQuestions(newQuestions);
-  };
-
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newQuestions = [...questions];
-    const draggedQuestion = newQuestions[draggedIndex];
-    newQuestions.splice(draggedIndex, 1);
-    newQuestions.splice(index, 0, draggedQuestion);
-
-    setQuestions(newQuestions);
-    
-    // Update current question index to follow the moved question
-    if (currentQuestionIndex === draggedIndex) {
-      setCurrentQuestionIndex(index);
-    } else if (draggedIndex < currentQuestionIndex && index >= currentQuestionIndex) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    } else if (draggedIndex > currentQuestionIndex && index <= currentQuestionIndex) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
-  };
+  // Editor hook provides all handlers and state
 
   const handleSaveQuiz = async () => {
     try {
-      const quizData = {
+      console.log('Saving quiz with title:', title, 'and questions:', questions);
+      const quizData: UpdateQuizDto = {
         title,
-        description,
-        timePerQuestion,
         questions: questions.map(q => ({
           question: q.question,
-          imageUrl: q.imageUrl,
+          imageUrl: (q as unknown as { imageUrl?: string }).imageUrl,
           type: q.type,
           answers: q.answers,
           timeLimit: q.timeLimit,
         })),
       };
 
-      if (isCreateMode) {
-        await quizService.createQuiz(quizData);
-        toast.success("Quiz créé avec succès !");
-      } else {
-        await quizService.updateQuiz(quizID, quizData);
-        toast.success("Quiz mis à jour avec succès !");
-      }
-      router.push("/quiz");
+      console.log('Quiz data to be sent for update:', quizData, 'for quiz ID:', quizID);
+      const a = await updateMutation.mutateAsync({ id: quizID, data: quizData });
     } catch (error) {
-      toast.error(`Erreur lors de ${isCreateMode ? "la création" : "la mise à jour"} du quiz`);
+      toast.error("Erreur lors de la mise à jour du quiz");
       console.error("Failed to save quiz:", error);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-700">Chargement...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen">
@@ -228,7 +163,7 @@ export default function QuizEditorPage() {
               Quitter
             </Button>
             <Button onClick={handleSaveQuiz}>
-              {isCreateMode ? "Créer" : "Enregistrer"}
+              Enregistrer
             </Button>
           </div>
         </div>
@@ -253,13 +188,31 @@ export default function QuizEditorPage() {
           </div>
 
           <div className="col-span-9">
-            <QuestionEditor
-              question={questions[currentQuestionIndex]}
-              questionNumber={currentQuestionIndex + 1}
-              onUpdate={(updated) => handleUpdateQuestion(currentQuestionIndex, updated)}
-              onDelete={() => handleDeleteQuestion(currentQuestionIndex)}
-              canDelete={questions.length > 1}
-            />
+            {isQueryError ? (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-red-600 text-lg">Erreur lors du chargement du quiz</div>
+                  <div className="text-sm text-gray-600 mt-2">{queryError?.message ?? 'Une erreur s\u2019est produite'}</div>
+                  {queryError?.status === 401 && (
+                    <div className="mt-4">
+                      <a href="/login" className="text-blue-600 underline">Se connecter</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : questions.length === 0 && isQueryLoading ? (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-gray-700">Chargement du quiz...</div>
+              </div>
+            ) : (
+              <QuestionEditor
+                question={questions[currentQuestionIndex]}
+                questionNumber={currentQuestionIndex + 1}
+                onUpdate={(updated) => handleUpdateQuestion(currentQuestionIndex, updated)}
+                onDelete={() => handleDeleteQuestion(currentQuestionIndex)}
+                canDelete={questions.length > 1}
+              />
+            )}
           </div>
         </div>
 
@@ -268,7 +221,7 @@ export default function QuizEditorPage() {
           onClose={() => setIsModalOpen(false)}
           onConfirm={handleConfirmQuestionSettings}
           initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : "single"}
-          initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : timePerQuestion}
+          initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : 30}
         />
 
         <ConfirmDeleteModal
