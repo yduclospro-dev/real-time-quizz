@@ -4,6 +4,7 @@ import { Trash2, Image, Clock } from "lucide-react";
 import { QuizQuestion, QuizAnswer } from "@/types/quiz.types";
 import { useId, useRef } from "react";
 import AnswerCard from "./AnswerCard";
+import { useFieldError } from '@/hooks/useFieldError';
 
 interface QuestionEditorProps {
   question: QuizQuestion;
@@ -20,6 +21,9 @@ export default function QuestionEditor({
   onDelete,
   canDelete,
 }: QuestionEditorProps) {
+  const qIndex = questionNumber - 1;
+  const questionError = useFieldError(`questions.${qIndex}.text`);
+  const answersError = useFieldError(`questions.${qIndex}.answers`);
   const handleQuestionTextChange = (text: string) => {
     onUpdate({ ...question, question: text });
   };
@@ -99,12 +103,14 @@ export default function QuestionEditor({
           )}
         </div>
         <textarea
+          name={`questions.${qIndex}.text`}
           value={question.question}
           onChange={(e) => handleQuestionTextChange(e.target.value)}
           placeholder="Entrez votre question ici"
           className="w-full text-2xl font-semibold border-2 border-gray-300 rounded-lg p-3 resize-none"
           rows={2}
         />
+        {questionError && <p className="mt-1 text-sm text-red-500">{questionError}</p>}
       </div>
 
       {/* Image Upload Section */}
@@ -141,6 +147,7 @@ export default function QuestionEditor({
             key={answer.id}
             answer={answer}
             index={index}
+            questionIndex={qIndex}
             questionType={question.type}
             questionId={question.id}
             canDelete={question.answers.length > 2}
@@ -150,6 +157,10 @@ export default function QuestionEditor({
           />
         ))}
       </div>
+      {/* Show answers-level field error (e.g. uniqueness) */}
+      {answersError && (
+        <p className="mt-1 text-sm text-red-500">{answersError}</p>
+      )}
 
       {/* Add Answer Button */}
       {question.answers.length < 6 && (

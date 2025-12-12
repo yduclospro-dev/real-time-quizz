@@ -1,11 +1,13 @@
 "use client";
 
 import { X } from "lucide-react";
+import { useFieldError } from '@/hooks/useFieldError';
 import { QuizAnswer } from "@/types/quiz.types";
 
 interface AnswerCardProps {
   answer: QuizAnswer;
   index: number;
+  questionIndex?: number;
   questionType: "single" | "multiple";
   questionId: string;
   canDelete: boolean;
@@ -26,6 +28,7 @@ const ANSWER_COLORS = {
 export default function AnswerCard({
   answer,
   index,
+  questionIndex,
   questionType,
   questionId,
   canDelete,
@@ -48,13 +51,20 @@ export default function AnswerCard({
           <div className="text-2xl font-bold flex-shrink-0">
             {getAnswerLabel(index)}
           </div>
-          <input
-            type="text"
-            value={answer.text}
-            onChange={(e) => onTextChange(e.target.value)}
-            placeholder={`Réponse ${index + 1}${index >= 2 ? " (optionnelle)" : ""}`}
-            className="flex-1 bg-transparent border-none text-white placeholder-white/70 focus:outline-none"
-          />
+          <div className="flex-1">
+            <input
+              name={questionIndex !== undefined ? `questions.${questionIndex}.answers.${index}.text` : undefined}
+              type="text"
+              value={answer.text}
+              onChange={(e) => onTextChange(e.target.value)}
+              placeholder={`Réponse ${index + 1}${index >= 2 ? " (optionnelle)" : ""}`}
+              className="w-full bg-transparent border-none text-white placeholder-white/70 focus:outline-none"
+            />
+            {/* field error (white text since card background is colored) */}
+            {questionIndex !== undefined && (
+              <p className="mt-1 text-xs text-white">{useFieldError(`questions.${questionIndex}.answers.${index}.text`)}</p>
+            )}
+          </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <input
               type={questionType === "single" ? "radio" : "checkbox"}

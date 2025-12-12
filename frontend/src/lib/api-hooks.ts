@@ -32,7 +32,8 @@ export const useApiMutation = <TArgs, TData, TError = ApiError, TContext = unkno
       const hasFieldDetails = !!(unknownErr as ApiError)?.details;
       const suppress = config?.suppressToastOnFieldErrors ?? true;
       if (!(suppress && hasFieldDetails)) {
-        showError(unknownErr as ApiError);
+        // If suppression is disabled, force the toast even when field details exist
+        showError(unknownErr as ApiError, { force: !suppress && hasFieldDetails });
       }
     } catch {}
 
