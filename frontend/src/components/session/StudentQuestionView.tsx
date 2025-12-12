@@ -78,7 +78,7 @@ export function StudentQuestionView({
               className={`
                 relative p-6 rounded-xl border-4 transition-all
                 ${colorClass}
-                ${selected ? "ring-4 ring-white scale-105" : "opacity-90"}
+                ${selected ? "ring-4 ring-white" : "opacity-90"}
                 text-white font-bold text-lg
                 min-h-[120px] flex items-center justify-center
                 shadow-lg hover:shadow-xl

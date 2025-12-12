@@ -5,6 +5,8 @@ interface QuestionResultsProps {
   questionNumber: number;
   userAnswers?: string[];
   isTeacher: boolean;
+  pauseTimeLeft: number;
+  isLastQuestion: boolean;
 }
 
 const ANSWER_COLORS = {
@@ -19,6 +21,8 @@ export function QuestionResults({
   questionNumber,
   userAnswers = [],
   isTeacher,
+  pauseTimeLeft,
+  isLastQuestion,
 }: QuestionResultsProps) {
   const correctAnswerIds = question.answers
     .filter((a) => a.isCorrect)
@@ -54,14 +58,20 @@ export function QuestionResults({
           const colorClass = ANSWER_COLORS[answer.color as keyof typeof ANSWER_COLORS];
           const isCorrectAnswer = answer.isCorrect;
           const wasSelected = userAnswers.includes(answer.id);
+          
+          // Get background color with low opacity
+          const bgColorClass = answer.color === 'red' ? 'bg-red-500/20' :
+                               answer.color === 'blue' ? 'bg-blue-500/20' :
+                               answer.color === 'yellow' ? 'bg-yellow-500/20' :
+                               'bg-green-500/20';
 
           return (
             <div
               key={answer.id}
               className={`
-                relative p-4 rounded-xl border-4 transition-all
-                ${colorClass}
-                ${isCorrectAnswer ? "bg-green-50 ring-4 ring-green-500" : "bg-gray-50"}
+                relative p-4 rounded-xl transition-all
+                ${bgColorClass}
+                ${isCorrectAnswer ? "ring-4 ring-green-500" : ""}
                 ${!isTeacher && wasSelected && !isCorrectAnswer ? "ring-4 ring-red-500" : ""}
                 min-h-[100px] flex items-center justify-center
               `}
@@ -95,7 +105,10 @@ export function QuestionResults({
       {/* Next question indicator */}
       <div className="mt-6 text-center">
         <p className="text-gray-600 animate-pulse">
-          Prochaine question dans quelques secondes...
+          {isLastQuestion 
+            ? `Résultats finaux dans ${pauseTimeLeft} seconde${pauseTimeLeft > 1 ? 's' : ''}...`
+            : `Prochaine question dans ${pauseTimeLeft} seconde${pauseTimeLeft > 1 ? 's' : ''}...`
+          }
         </p>
       </div>
     </div>

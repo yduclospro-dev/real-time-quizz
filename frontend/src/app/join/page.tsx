@@ -20,8 +20,11 @@ export default function JoinSessionPage() {
 
     try {
       setIsLoading(true);
-      // TODO: Validate session code with backend
-      // For now, just redirect
+      // TODO BACKEND: POST /api/sessions/join
+      // Body: { sessionCode: string }
+      // Response: { sessionId: string, quizId: string }
+      // Then redirect to /quiz/:quizId/session
+      // For now, mock: just redirect to session page
       router.push(`/quiz/${code}/session`);
     } catch (error) {
       toast.error("Code de session invalide");
