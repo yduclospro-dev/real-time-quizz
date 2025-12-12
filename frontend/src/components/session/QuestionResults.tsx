@@ -45,9 +45,9 @@ export function QuestionResults({
 
       {/* Student result indicator */}
       {!isTeacher && (
-        <div className={`mb-6 p-4 rounded-xl ${isCorrect ? "bg-green-100 border-2 border-green-500" : "bg-red-100 border-2 border-red-500"}`}>
-          <p className={`font-bold text-center text-lg ${isCorrect ? "text-green-900" : "text-red-900"}`}>
-            {isCorrect ? "✓ Bonne réponse !" : "✗ Mauvaise réponse"}
+        <div className="mb-6">
+          <p className={`font-bold text-center text-2xl ${isCorrect ? "text-green-600" : "text-red-600"}`}>
+            {isCorrect ? "Bonne Réponse" : "Mauvaise Réponse"}
           </p>
         </div>
       )}
