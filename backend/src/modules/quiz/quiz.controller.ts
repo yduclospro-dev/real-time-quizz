@@ -89,12 +89,7 @@ export class QuizController {
         'Seuls les enseignants peuvent supprimer des quiz',
       );
     }
-
-    console.log('Deleting quiz with id:', id, 'by user:', user.sub);
-
     await this.quizService.deleteQuiz(id, user.sub);
-
-    console.log('Quiz deleted successfully');
     return successResponse(null);
   }
 }

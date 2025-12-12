@@ -9,6 +9,7 @@ import { QuizDto, quizToDto } from '../../common/types/quiz-dto';
 import { ApiException } from '../../common/exceptions/api.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 import { UpdateQuizRequest } from './requests/update-quiz.request';
+import { QuestionType } from '@shared/enums/question-type';
 
 export type QuizWithQuestions = Prisma.QuizGetPayload<{
   include: {
@@ -252,7 +253,10 @@ export class QuizService {
         );
       }
 
-      if (question.type === 'SINGLE_CHOICE' && correctAnswers.length !== 1) {
+      if (
+        (question.type as QuestionType) === QuestionType.SINGLE_CHOICE &&
+        correctAnswers.length !== 1
+      ) {
         throw new ApiException(
           400,
           ErrorCode.VALIDATION_ERROR,

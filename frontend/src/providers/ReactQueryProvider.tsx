@@ -8,7 +8,7 @@ import { mapApiErrorToUserMessage } from '../lib/error-mapping';
 import { FieldErrorProvider } from '../contexts/FieldErrorContext';
 
 type ErrorContextValue = {
-  showError: (e: ApiError) => void;
+  showError: (e: ApiError, opts?: { force?: boolean }) => void;
 };
 
 const ErrorContext = createContext<ErrorContextValue | undefined>(undefined);
@@ -30,10 +30,10 @@ export function ReactQueryProvider({ children }: { children: ReactNode }) {
     },
   }));
 
-  const showError = (e: ApiError) => {
+  const showError = (e: ApiError, opts?: { force?: boolean }) => {
     const mapped = mapApiErrorToUserMessage(e);
     const hasFieldDetails = !!e.details;
-    if (!hasFieldDetails) toast.error(mapped.message);
+    if (!hasFieldDetails || opts?.force) toast.error(mapped.message);
   };
 
   // Ensure queries also use the centralized showError handler for global errors.

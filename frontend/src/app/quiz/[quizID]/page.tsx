@@ -17,6 +17,9 @@ import { UpdateQuizDto, Quiz } from "@/types/quiz.types";
 import { quizService } from "@/services/quiz.service";
 import toast from "react-hot-toast";
 import type { ApiError } from '@/lib/api-client';
+import { useGlobalError } from '@/providers/ReactQueryProvider';
+import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
+import { createQuizSchema } from '@/schemas/quiz.schema';
 
 export default function QuizEditorPage() {
   const params = useParams();
@@ -59,6 +62,7 @@ export default function QuizEditorPage() {
 
   // Load quiz data if in edit mode
   const queryClient = useQueryClient();
+  const { showError } = useGlobalError();
 
   const initRef = useRef(false);
   const queryResult = useQuery<Quiz | undefined, ApiError>({
@@ -86,13 +90,21 @@ export default function QuizEditorPage() {
     if (queryError) {
       console.error('Failed to load quiz (effect)', queryError);
       try {
-        if (queryError?.message) toast.error(queryError.message);
-        else toast.error('Erreur lors du chargement du quiz');
+        // Use centralized error display which maps backend codes to user-friendly messages
+        if ((queryError as ApiError)?.code) {
+            // Use centralized error handler; force true ensures toasts show even for validation details
+            showError(queryError as ApiError, { force: true });
+        } else if ((queryError as unknown as Error)?.message) {
+          toast.error((queryError as unknown as Error).message);
+        } else {
+          toast.error('Erreur lors du chargement du quiz');
+        }
       } catch {}
     }
-  }, [queryError]);
+  }, [queryError, showError]);
 
   const router = useRouter();
+  const { setFieldErrorsFromApiError } = useFieldErrorContext();
 
   useEffect(() => {
     if (isQueryError) {
@@ -116,8 +128,10 @@ export default function QuizEditorPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quizzes'] });
       queryClient.invalidateQueries({ queryKey: ['quiz', quizID] });
+      toast.success('Quiz mis à jour avec succès !');
+      router.push('/quiz');
     },
-  });
+  }, { suppressToastOnFieldErrors: false });
 
   // Editor hook provides all handlers and state
 
@@ -135,8 +149,23 @@ export default function QuizEditorPage() {
         })),
       };
 
+      // Client-side validation with Zod
+      const validation = createQuizSchema.safeParse({ title: quizData.title, questions: quizData.questions });
+      if (!validation.success) {
+        // Map zod issues to ApiError-style details so the UI can show field errors
+        const details = validation.error.issues.map((iss) => ({ field: iss.path.join('.'), message: iss.message }));
+        const apiErr: ApiError = { code: 'VALIDATION_ERROR', message: 'Validation failed', details, status: 400 };
+        try {
+          setFieldErrorsFromApiError(apiErr);
+        } catch {}
+        try {
+          showError(apiErr, { force: true });
+        } catch {}
+        return;
+      }
+
       console.log('Quiz data to be sent for update:', quizData, 'for quiz ID:', quizID);
-      const a = await updateMutation.mutateAsync({ id: quizID, data: quizData });
+      await updateMutation.mutateAsync({ id: quizID, data: quizData });
     } catch (error) {
       toast.error("Erreur lors de la mise à jour du quiz");
       console.error("Failed to save quiz:", error);
@@ -151,6 +180,7 @@ export default function QuizEditorPage() {
             <Input
               label=""
               type="text"
+              name="title"
               placeholder="Titre du quiz"
               value={title}
               onChange={(e) => setTitle(e.target.value)}

@@ -16,6 +16,18 @@ export const quizQuestionSchema = z.object({
     .refine(
       (answers) => answers.some((answer) => answer.isCorrect),
       "Au moins une réponse doit être correcte"
+    )
+    .refine(
+      (answers) => {
+        const seen = new Set<string>();
+        for (const a of answers) {
+          const key = a.text.trim().toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+        }
+        return true;
+      },
+      "Les réponses doivent être uniques"
     ),
   timeLimit: z.number().min(5).max(300),
 });
