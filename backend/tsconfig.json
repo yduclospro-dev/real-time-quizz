@@ -3,5 +3,9 @@
   "compilerOptions": {
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
+    ,
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
   }
 }

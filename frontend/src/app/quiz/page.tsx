@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Header } from "@/components/layout/Header";
 import { QuizCard } from "@/components/quiz/QuizCard";
 import { ConfirmDeleteQuizModal } from "@/components/quiz/ConfirmDeleteQuizModal";
 import { quizService } from "@/services/quiz.service";
@@ -90,7 +89,6 @@ export default function QuizListPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="Mes Quiz" />
 
       {/* Content */}
       <div className="px-8 py-6">
@@ -108,12 +106,13 @@ export default function QuizListPage() {
               />
             </div>
             <Button
-              variant="primary"
-              onClick={() => router.push("/quiz/create")}
-              className="p-2"
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
+                variant="primary"
+                onClick={() => router.push("/quiz/create")}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Créer un quiz
+              </Button>
           </div>
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -145,16 +144,6 @@ export default function QuizListPage() {
                 ))}
               </div>
             )}
-            <div className="flex justify-center">
-              <Button
-                variant="primary"
-                onClick={() => router.push("/quiz/create")}
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Créer un quiz
-              </Button>
-            </div>
           </>
         )}
         </div>

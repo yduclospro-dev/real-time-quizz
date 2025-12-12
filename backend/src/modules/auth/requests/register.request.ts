@@ -5,7 +5,7 @@ import {
   MinLength,
   IsNotEmpty,
 } from 'class-validator';
-import { Role } from '../../../../../shared/enums/role';
+import { Role } from '@shared/enums/role';
 
 export class RegisterRequest {
   @IsString({ message: 'Le nom doit être une chaîne de caractères' })

@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { loginSchema, LoginFormData } from "@/schemas/auth.schema";
+import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const { validate } = useFormValidation(loginSchema);
+  const { setFieldErrorsFromApiError } = useFieldErrorContext();
 
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -41,11 +43,20 @@ export default function LoginPage() {
 
     // Clear errors and submit
     setErrors({});
-    await login(formData);
+    try {
+      await login(formData);
+    } catch (err: any) {
+      // err should be ApiError from api-client
+      if (err?.details) {
+        setFieldErrorsFromApiError(err);
+      }
+
+      // global toast is handled by useApiMutation; nothing to do here
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-linear-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">

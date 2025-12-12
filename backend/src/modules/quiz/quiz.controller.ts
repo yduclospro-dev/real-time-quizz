@@ -16,7 +16,7 @@ import { QuizDto } from '../../common/types/quiz-dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { successResponse } from '../../common/http/api-response.util';
-import { Role } from '../../../../shared/enums/role';
+import { Role } from '@shared/enums/role';
 import { ApiException } from '../../common/exceptions/api.exception';
 import { ErrorCode } from '../../common/errors/error-codes';
 

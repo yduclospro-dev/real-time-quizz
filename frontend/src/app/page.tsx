@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
-import { Role } from "../../../shared/enums/role";
+import { Role } from "@shared/enums/role";
 
 export default function Home() {
   const { user, isLoading, logout } = useAuth();
@@ -17,25 +17,7 @@ export default function Home() {
 
   if (user) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16 items-center">
-              <h1 className="text-xl font-bold text-gray-900">Quiz Real-Time</h1>
-              <div className="flex items-center gap-4">
-                <span className="text-gray-700">
-                  {user.firstName} {user.lastName}
-                </span>
-                <button
-                  onClick={() => logout()}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
-                >
-                  Déconnexion
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
+      <div className="min-h-screen">
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
@@ -119,7 +101,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100">
+    <div className="flex min-h-screen items-center justify-center">
       <main className="flex flex-col items-center justify-center gap-8 p-8 text-center">
         <div className="space-y-4">
           <h1 className="text-5xl font-bold text-gray-900">

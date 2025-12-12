@@ -1,4 +1,4 @@
-import { Role } from '../../../../shared/enums/role';
+import { Role } from '@shared/enums/role';
 
 export interface JwtPayload {
   sub: string;

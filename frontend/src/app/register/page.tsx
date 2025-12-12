@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { registerSchema, RegisterFormData } from "@/schemas/auth.schema";
-import { Role } from "../../../../shared/enums/role";
+import { Role } from "@shared/enums/role";
+import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
 
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "Élève" },
@@ -18,6 +19,7 @@ const ROLE_OPTIONS = [
 export default function RegisterPage() {
   const { register, isLoading } = useAuth();
   const { validate } = useFormValidation(registerSchema);
+  const { setFieldErrorsFromApiError } = useFieldErrorContext();
 
   const [formData, setFormData] = useState<RegisterFormData>({
     firstName: "",
@@ -53,14 +55,21 @@ export default function RegisterPage() {
 
     // Clear errors and submit
     setErrors({});
-    await register({
-      ...formData,
-      role: formData.role as Role,
-    });
+    try {
+      await register({
+        ...formData,
+        role: formData.role as Role,
+      });
+    } catch (err: any) {
+      if (err?.details) {
+        setFieldErrorsFromApiError(err);
+      }
+      // global toast is handled by useApiMutation; nothing to do here
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-linear-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">

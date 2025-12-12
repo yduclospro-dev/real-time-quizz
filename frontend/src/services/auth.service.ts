@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api-client";
-import { UserDto } from "../../../backend/src/common/types/user-dto";
+import type { UserDto } from '@shared/types/user-dto';
 import { LoginData, RegisterData } from "@/types/auth.types";
-import { ApiResponse } from '../../../backend/src/common/types/api-response';
+import type { ApiResponse } from '@shared/types/api-response';
 
 export const authService = {
   async register(data: RegisterData): Promise<ApiResponse<{ user: UserDto }>> {

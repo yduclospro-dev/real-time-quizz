@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Header } from "@/components/layout/Header";
 import QuestionSidebar from "@/components/quiz/QuestionSidebar";
 import QuestionEditor from "@/components/quiz/QuestionEditor";
 import QuestionSettingsModal from "@/components/quiz/QuestionSettingsModal";
@@ -203,32 +202,37 @@ export default function QuizEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-700">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
-      <Header showUser={false}>
-        <Input
-          label=""
-          type="text"
-          placeholder="Titre du quiz"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="text-2xl font-bold max-w-md"
-        />
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={handleExit}>
-            Quitter
-          </Button>
-          <Button onClick={handleSaveQuiz}>
-            {isCreateMode ? "Créer" : "Enregistrer"}
-          </Button>
+    <div className="min-h-screen">
+      <div className="bg-white border-b-2 border-gray-200 shadow-lg">
+        <div className="px-8 py-4 max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex-1">
+            <Input
+              label=""
+              type="text"
+              placeholder="Titre du quiz"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-2xl font-bold max-w-md"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={handleExit}>
+              Quitter
+            </Button>
+            <Button onClick={handleSaveQuiz}>
+              {isCreateMode ? "Créer" : "Enregistrer"}
+            </Button>
+          </div>
         </div>
-      </Header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-12 gap-6">
