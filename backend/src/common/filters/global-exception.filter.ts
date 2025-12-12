@@ -1,64 +1,96 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { Response } from 'express';
-import { ApiResponse } from '../types/api-response';
+import { ApiException } from '../exceptions/api.exception';
 import { Prisma } from '@prisma/client';
+import type { Response } from 'express';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
+    const response = host.switchToHttp().getResponse<Response>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
-    let errors: any = undefined;
-
-    if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      const exceptionResponse = exception.getResponse();
-
-      if (typeof exceptionResponse === 'string') {
-        message = exceptionResponse;
-      } else if (typeof exceptionResponse === 'object' && exceptionResponse) {
-        const resp = exceptionResponse as Record<string, unknown>;
-        message =
-          (typeof resp.message === 'string' ? resp.message : undefined) ||
-          exception.message;
-        errors = resp.errors;
-      }
-
-      // Personnaliser les messages d'erreur 401
-      if (status === HttpStatus.UNAUTHORIZED && message === 'Unauthorized') {
-        message = 'Authentification requise, veuillez vous connecter';
-      }
-    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      // Erreurs Prisma connues
-      status = HttpStatus.BAD_REQUEST;
-      if (exception.code === 'P2002') {
-        message = 'Cette valeur est déjà utilisée';
-      } else if (exception.code === 'P2025') {
-        status = HttpStatus.NOT_FOUND;
-        message = 'Ressource introuvable';
-      } else {
-        message = 'Erreur de base de données';
-      }
-    } else if (exception instanceof Error) {
-      message = exception.message;
+    // 1️⃣ Erreur métier connue
+    if (exception instanceof ApiException) {
+      console.log('API Exception:', exception);
+      return response.status(exception.status).json({
+        success: false,
+        data: null,
+        error: {
+          code: exception.code,
+          message: exception.message,
+          details: exception.details,
+        },
+      });
     }
-    // Format ApiResponse pour les erreurs
-    console.log('GlobalExceptionFilter caught an exception:', {
-      status,
-      message,
-      errors,
-    });
-    const responseBody = ApiResponse.error(message, errors);
 
-    response.status(status).json(responseBody);
+    // 2️⃣ HttpException NestJS (fallback)
+    if (exception instanceof HttpException) {
+      console.error('HTTP Exception:', exception);
+      return response.status(exception.getStatus()).json({
+        success: false,
+        data: null,
+        error: {
+          code: exception.getStatus().toString(),
+          message: exception.message,
+        },
+      });
+    }
+
+    // 3️⃣ Prisma (converti en ApiException)
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      const apiException = mapPrismaError(exception);
+      return response.status(apiException.status).json({
+        success: false,
+        data: null,
+        error: {
+          code: apiException.code,
+          message: apiException.message,
+        },
+      });
+    }
+
+    console.error('Unknown Exception:', exception);
+    // 4️⃣ Inconnu = 500
+    return response.status(500).json({
+      success: false,
+      data: null,
+      error: {
+        code: HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+        message: 'Internal server error',
+      },
+    });
+  }
+}
+
+function mapPrismaError(
+  exception: Prisma.PrismaClientKnownRequestError,
+): ApiException {
+  console.error('Prisma Exception:', exception);
+  switch (exception.code) {
+    case 'P2002':
+      return new ApiException(
+        HttpStatus.BAD_REQUEST,
+        'UNIQUE_CONSTRAINT',
+        'Cette valeur est déjà utilisée',
+      );
+
+    case 'P2025':
+      return new ApiException(
+        HttpStatus.NOT_FOUND,
+        'NOT_FOUND',
+        'Ressource introuvable',
+      );
+
+    default:
+      return new ApiException(
+        HttpStatus.BAD_REQUEST,
+        'DATABASE_ERROR',
+        'Erreur de base de données',
+      );
   }
 }

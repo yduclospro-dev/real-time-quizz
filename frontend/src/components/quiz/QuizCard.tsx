@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Pencil, Trash2, Play } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { QuizListItem } from "@/types/quiz.types";
@@ -49,7 +48,7 @@ export function QuizCard({ quiz, onDelete, onStartSession }: QuizCardProps) {
         <Button
           variant="outline"
           onClick={() => onDelete(quiz.id)}
-          className="!p-2"
+          className="p-2!"
         >
           <Trash2 className="w-4 h-4 text-red-600" />
         </Button>

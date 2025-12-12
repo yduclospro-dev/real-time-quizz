@@ -1,9 +1,11 @@
 import 'dotenv/config';
-import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { ApiException } from './common/exceptions/api.exception';
+import { ValidationError, ValidationPipe } from '@nestjs/common';
+import { ErrorCode } from './common/errors/error-codes';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,31 +29,60 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: true,
       exceptionFactory: (errors) => {
-        const formattedErrors = errors.map((error) => {
-          // Si c'est une propriété non autorisée
-          if (error.constraints?.whitelistValidation) {
-            return {
-              field: error.property,
-              message: `Le champ '${error.property}' n'est pas autorisé`,
-            };
-          }
-          // Sinon, prendre le premier message de validation
-          return {
-            field: error.property,
-            message: Object.values(error.constraints || {})[0],
-          };
-        });
-        return new BadRequestException({
-          statusCode: 400,
-          message: 'La validation a échoué',
-          errors: formattedErrors,
-        });
+        const details = flattenValidationErrors(errors);
+
+        return new ApiException(
+          400,
+          ErrorCode.VALIDATION_ERROR,
+          'La validation a échoué',
+          details,
+        );
       },
     }),
   );
 
   await app.listen(3000);
   console.log(`🚀 Backend running on: http://localhost:3000`);
+}
+
+export function flattenValidationErrors(
+  errors: ValidationError[],
+  parentPath = '',
+): { field: string; message: string }[] {
+  const result: { field: string; message: string }[] = [];
+
+  for (const error of errors) {
+    const fieldPath = parentPath
+      ? `${parentPath}.${error.property}`
+      : error.property;
+
+    if (isWhitelistError(error)) {
+      result.push({
+        field: fieldPath,
+        message: `Le champ '${fieldPath}' n'est pas autorisé`,
+      });
+      continue;
+    }
+
+    if (error.constraints) {
+      for (const message of Object.values(error.constraints)) {
+        result.push({
+          field: fieldPath,
+          message,
+        });
+      }
+    }
+
+    if (error.children && error.children.length > 0) {
+      result.push(...flattenValidationErrors(error.children, fieldPath));
+    }
+  }
+
+  return result;
+}
+
+function isWhitelistError(error: ValidationError): boolean {
+  return !!error.constraints?.whitelistValidation;
 }
 
 void bootstrap();

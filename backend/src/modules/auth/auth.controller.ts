@@ -1,23 +1,15 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  UseGuards,
-  Res,
-  NotFoundException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { RegisterRequest } from './requests/register.request';
 import { LoginRequest } from './requests/login.request';
-import { ApiResponse } from '../../common/types/api-response';
-import { UserDto } from '../../common/types/user-dto';
+import type { ApiResponse } from '../../common/types/api-response';
+import type { UserDto } from '../../common/types/user-dto';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { JwtPayload } from './interfaces/jwt-payload.interface';
-import { User } from '@prisma/client';
+import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { successResponse } from '../../common/http/api-response.util';
 
 @Controller('auth')
 export class AuthController {
@@ -41,9 +33,7 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return ApiResponse.success('Inscription réussie', {
-      user: UserDto.fromEntity(user),
-    });
+    return successResponse({ user });
   }
 
   @Post('login')
@@ -62,12 +52,10 @@ export class AuthController {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return ApiResponse.success('Connexion réussie', {
-      user: UserDto.fromEntity(user),
-    });
+    return successResponse({ user });
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,20 +63,13 @@ export class AuthController {
   async me(
     @CurrentUser() jwtPayload: JwtPayload,
   ): Promise<ApiResponse<UserDto>> {
-    const user = await this.userService.findById(jwtPayload.sub);
-    if (!user) {
-      throw new NotFoundException('Utilisateur introuvable');
-    }
-
-    return ApiResponse.success(
-      'Utilisateur récupéré avec succès',
-      UserDto.fromEntity(user as User),
-    );
+    const user = await this.userService.findByIdOrFail(jwtPayload.sub);
+    return successResponse(user);
   }
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response): ApiResponse<null> {
     res.clearCookie('access_token');
-    return ApiResponse.success('Déconnexion réussie');
+    return successResponse(null);
   }
 }

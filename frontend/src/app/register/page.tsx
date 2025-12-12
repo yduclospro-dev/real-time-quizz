@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { registerSchema, RegisterFormData } from "@/schemas/auth.schema";
-import { UserRole } from "../../../../backend/src/common/types/user-role";
+import { Role } from "../../../../shared/enums/role";
 
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "Élève" },
@@ -24,7 +24,7 @@ export default function RegisterPage() {
     lastName: "",
     email: "",
     password: "",
-    role: UserRole.STUDENT || UserRole.TEACHER,
+    role: Role.STUDENT || Role.TEACHER,
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
@@ -55,7 +55,7 @@ export default function RegisterPage() {
     setErrors({});
     await register({
       ...formData,
-      role: formData.role as UserRole,
+      role: formData.role as Role,
     });
   };
 

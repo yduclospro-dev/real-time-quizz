@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
+import { ApiException } from '../../common/exceptions/api.exception';
+import { ErrorCode } from '../../common/errors/error-codes';
+import { UserDto, mapRole } from '../../common/types/user-dto';
 
 @Injectable()
 export class UserService {
-  private prisma: PrismaService;
-
-  constructor(prisma: PrismaService) {
-    this.prisma = prisma;
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: Prisma.UserCreateInput): Promise<User> {
-    const user = await this.prisma.user.create({ data });
-    return user ?? null;
+    return this.prisma.user.create({ data });
   }
 
-  async findById(id: string): Promise<Partial<User> | null> {
+  async findByIdOrFail(id: string): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
@@ -27,11 +25,28 @@ export class UserService {
         createdAt: true,
       },
     });
-    return user ?? null;
+
+    if (!user) {
+      throw new ApiException(
+        404,
+        ErrorCode.NOT_FOUND,
+        'Utilisateur introuvable',
+      );
+    }
+
+    return {
+      id: user.id,
+      lastName: user.lastName,
+      firstName: user.firstName,
+      email: user.email,
+      role: mapRole(user.role),
+      createdAt: user.createdAt,
+    };
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    return user ?? null;
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 }

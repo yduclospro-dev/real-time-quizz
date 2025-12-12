@@ -77,7 +77,7 @@ export default function QuestionEditor({
     <div className="bg-white rounded-lg shadow-lg p-8">
       {/* Question Header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4 min-h-[24px]">
+        <div className="flex items-center justify-between mb-4 min-h-6">
           <div className="text-base font-medium text-gray-700 flex items-center gap-2">
             <span>Question {questionNumber}</span>
             <span className="flex items-center gap-1 text-sm text-gray-500">

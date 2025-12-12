@@ -7,9 +7,11 @@ import { QuizModule } from './modules/quiz/quiz.module';
 import { QuestionModule } from './modules/question/question.module';
 import { SessionModule } from './modules/session/session.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
 
 @Module({
   imports: [
+    PrismaModule,
     AuthModule,
     UserModule,
     QuizModule,
