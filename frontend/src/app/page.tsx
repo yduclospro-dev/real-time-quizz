@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "../../../backend/src/common/types/user-role";
 
 export default function Home() {
   const { user, isLoading, logout } = useAuth();
@@ -42,17 +43,17 @@ export default function Home() {
               Bienvenue, {user.firstName} !
             </h2>
             <p className="text-xl text-gray-600">
-              {user.role === 'teacher' 
+              {user.role === UserRole.TEACHER 
                 ? 'Gérez vos quiz et lancez des sessions en temps réel' 
                 : 'Rejoignez des sessions de quiz et testez vos connaissances'}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {user.role === 'teacher' ? (
+            {user.role === UserRole.TEACHER ? (
               <>
                 <Link
-                  href="/quiz/create"
+                  href="/quiz"
                   className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
                 >
                   <h3 className="text-xl font-semibold mb-2 text-gray-900">
