@@ -1,5 +1,5 @@
 import { ApiResponse } from '../../../backend/src/common/types/api-response';
-import { UserRole } from '../../../backend/src/common/types/user-role';
+import { Role } from '../../../shared/enums/role';
 
 export type ApiError = ApiResponse<never>;
 
@@ -8,7 +8,7 @@ export interface RegisterData {
   lastName: string;
   email: string;
   password: string;
-  role: UserRole;
+  role: Role;
 }
 
 export interface LoginData {

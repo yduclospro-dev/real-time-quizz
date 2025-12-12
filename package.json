@@ -7,8 +7,10 @@
     "shared"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run start:dev --workspace=backend\"",
-    "install:all": "npm install && npm run prisma:generate --workspace=backend && npx prisma migrate deploy --workspace=backend"
+    "install:all": "npm install",
+    "prisma:generate": "npm run prisma:generate -w backend",
+    "prisma:migrate": "npm run prisma:migrate -w backend",
+    "dev": "concurrently -k -n FRONTEND,BACKEND \"npm run dev -w frontend\" \"npm run start:dev -w backend\""
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

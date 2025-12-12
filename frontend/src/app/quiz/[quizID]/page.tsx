@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -203,14 +203,14 @@ export default function QuizEditorPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100 flex items-center justify-center">
         <div className="text-gray-700">Chargement...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
+    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
       <Header showUser={false}>
         <Input
           label=""

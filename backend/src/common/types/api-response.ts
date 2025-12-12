@@ -1,33 +1,16 @@
-export class ApiResponse<T = any> {
+export type ApiResponse<T> = {
   success: boolean;
+  data: T | null;
+  error: ApiError | null;
+};
+
+export type ApiError = {
+  code: string;
   message: string;
-  data?: T;
-  errors?: Array<{ field: string; message: string }>;
+  details?: FieldError[];
+};
 
-  constructor(
-    success: boolean,
-    message: string,
-    data?: T,
-    errors?: Array<{ field: string; message: string }>,
-  ) {
-    this.success = success;
-    this.message = message;
-    if (data !== undefined) {
-      this.data = data;
-    }
-    if (errors !== undefined) {
-      this.errors = errors;
-    }
-  }
-
-  static success<T>(message: string, data?: T): ApiResponse<T> {
-    return new ApiResponse(true, message, data);
-  }
-
-  static error(
-    message: string,
-    errors?: Array<{ field: string; message: string }>,
-  ): ApiResponse {
-    return new ApiResponse(false, message, undefined, errors);
-  }
-}
+export type FieldError = {
+  field: string;
+  message: string;
+};
