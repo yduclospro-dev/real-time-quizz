@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Header } from "@/components/layout/Header";
 import toast from "react-hot-toast";
 import { sessionService } from "@/services/session.service";
 import { useAuth } from '@/hooks/useAuth';
@@ -39,10 +38,7 @@ export default function JoinSessionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
-      <Header title="Rejoindre une session" />
-
-      <div className="flex items-center justify-center px-4 py-20">
+    <div className="flex items-center justify-center px-4 py-20">
         <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
           <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
             Rejoindre un quiz
@@ -73,6 +69,5 @@ export default function JoinSessionPage() {
           </div>
         </div>
       </div>
-    </div>
   );
 }

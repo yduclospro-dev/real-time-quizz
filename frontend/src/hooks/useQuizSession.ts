@@ -6,6 +6,8 @@ import { QuestionType } from '../../../shared/enums/question-type';
 import { SessionState as SharedSessionState } from '../../../shared/enums/session-state';
 import { sessionService } from '@/services/session.service';
 import type { ServerSessionDto } from '@/types/session.types';
+import { useAuth } from './useAuth';
+import { Role } from '../../../shared/enums/role';
 
 interface StudentAnswer {
   studentName: string;
@@ -30,6 +32,7 @@ export function useQuizSession() {
   const params = useParams();
   const sessionId = params.sessionId as string;
   const quizId = params.quizId as string;
+  const { user } = useAuth();
 
   // ============================================
   // STATE: Session Connection & User Role
@@ -40,7 +43,7 @@ export function useQuizSession() {
   const [isBetweenQuestions, setIsBetweenQuestions] = useState(false);
   const [sessionCode, setSessionCode] = useState("");
   const [participants, setParticipants] = useState<string[]>([]);
-  const [isTeacher, setIsTeacher] = useState(false); // TODO: Get from auth context
+  const isTeacher = user?.role === Role.TEACHER;
 
   // ============================================
   // STATE: Quiz Progress & Questions

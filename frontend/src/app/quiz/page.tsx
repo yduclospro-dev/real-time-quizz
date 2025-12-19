@@ -89,8 +89,7 @@ export default function QuizListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
+    <>
       {/* Content */}
       <div className="px-8 py-6">
         <div className="max-w-3xl mx-auto">
@@ -160,6 +159,6 @@ export default function QuizListPage() {
         onConfirm={confirmDelete}
         quizTitle={quizToDelete?.title || ""}
       />
-    </div>
+    </>
   );
 }

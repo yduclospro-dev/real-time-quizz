@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/Button";
 import { QuizQuestion } from "@/types/quiz.types";
 import { useRouter } from "next/navigation";
@@ -16,7 +15,6 @@ interface SessionFinishedProps {
   userScore: number;
   showCorrection: boolean;
   onToggleCorrection: (show: boolean) => void;
-  onQuit: () => void;
 }
 
 export function SessionFinished({
@@ -26,14 +24,11 @@ export function SessionFinished({
   userScore,
   showCorrection,
   onToggleCorrection,
-  onQuit,
 }: SessionFinishedProps) {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-      <Header title="Quiz terminé" onQuit={onQuit} />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">
             🎉 Quiz terminé !
@@ -271,6 +266,5 @@ export function SessionFinished({
           </Button>
         </div>
       </div>
-    </div>
   );
 }

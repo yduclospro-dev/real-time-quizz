@@ -29,12 +29,12 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-purple-100 to-blue-100 min-h-screen`}
       >
         <ReactQueryProvider>
           <AuthProvider>
             <HeaderWrapper />
-            <main className="max-w-6xl mx-auto px-4 py-6">{children}</main>
+            {children}
             <Toaster
               position="top-right"
               toastOptions={{

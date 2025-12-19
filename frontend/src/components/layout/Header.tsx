@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { useAuth } from '@/hooks/useAuth';
 
-export function Header({ title, showUser = true, onQuit }: { title?: string; children?: React.ReactNode; showUser?: boolean; onQuit?: () => void }) {
+export function Header({ title, showUser = true, onQuit, hideLogout = false }: { title?: string; children?: React.ReactNode; showUser?: boolean; onQuit?: () => void; hideLogout?: boolean }) {
   const { user, logout, isLoading } = useAuth();
 
   return (
@@ -25,9 +25,11 @@ export function Header({ title, showUser = true, onQuit }: { title?: string; chi
                   Quitter
                 </Button>
               )}
-              <Button variant="outline" onClick={() => logout()} disabled={isLoading}>
-                Déconnexion
-              </Button>
+              {!hideLogout && (
+                <Button variant="outline" onClick={() => logout()} disabled={isLoading}>
+                  Déconnexion
+                </Button>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-4">

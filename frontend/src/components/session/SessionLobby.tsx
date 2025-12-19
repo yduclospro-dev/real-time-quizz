@@ -16,8 +16,7 @@ export function SessionLobby({
   onCopyCode,
 }: SessionLobbyProps) {
   return (
-    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Session Code Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
@@ -76,19 +75,12 @@ export function SessionLobby({
 
         {/* Waiting Message (Student) */}
         {!isTeacher && (
-          <>
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center mb-4">
-              <p className="text-blue-800 font-medium">
-                En attente du démarrage par le professeur...
-              </p>
-            </div>
-            {/* TODO: Remove this test button before production */}
-            <Button variant="outline" onClick={onStart} className="w-full">
-              [TEST] Démarrer quand même
-            </Button>
-          </>
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center mb-4">
+            <p className="text-blue-800 font-medium">
+              En attente du démarrage par le professeur...
+            </p>
+          </div>
         )}
       </div>
-    </div>
   );
 }

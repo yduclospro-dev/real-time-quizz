@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/Header";
 import { QuestionResults } from "./QuestionResults";
 import TeacherQuestionResults from "./TeacherQuestionResults";
 import { Scoreboard } from "./Scoreboard";
@@ -20,7 +19,6 @@ interface SessionBetweenQuestionsProps {
   pauseTimeLeft: number;
   isLastQuestion: boolean;
   liveScores: Array<{ studentName: string; score: number; totalQuestions: number }>;
-  onQuit: () => void;
 }
 
 export function SessionBetweenQuestions({
@@ -32,12 +30,9 @@ export function SessionBetweenQuestions({
   pauseTimeLeft,
   isLastQuestion,
   liveScores,
-  onQuit,
 }: SessionBetweenQuestionsProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-      <Header title="Résultat" onQuit={onQuit} />
-      <div className="grid grid-cols-[280px_1fr_280px] gap-4 px-12 py-8">
+    <div className="grid grid-cols-[280px_1fr_280px] gap-4 px-12 py-8">
         {/* Empty left spacer */}
         <div></div>
 
@@ -71,6 +66,5 @@ export function SessionBetweenQuestions({
           />
         </div>
       </div>
-    </div>
   );
 }

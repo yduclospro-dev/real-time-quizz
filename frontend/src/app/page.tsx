@@ -17,9 +17,7 @@ export default function Home() {
 
   if (user) {
     return (
-      <div className="min-h-screen">
-
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Bienvenue, {user.firstName} !
@@ -96,13 +94,11 @@ export default function Home() {
             )}
           </div>
         </main>
-      </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <main className="flex flex-col items-center justify-center gap-8 p-8 text-center">
+      <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8 text-center">
         <div className="space-y-4">
           <h1 className="text-5xl font-bold text-gray-900">
             Quiz Real-Time
@@ -146,6 +142,5 @@ export default function Home() {
           </div>
         </div>
       </main>
-    </div>
   );
 }
