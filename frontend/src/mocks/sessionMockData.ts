@@ -1,4 +1,6 @@
 import { QuizQuestion } from "@/types/quiz.types";
+import { QuestionType } from '@shared/enums/question-type';
+import { SessionState } from '@shared/enums/session-state';
 
 /**
  * MOCK DATA FOR DEVELOPMENT
@@ -15,6 +17,8 @@ export const MOCK_SESSION = {
     "Pierre Dubois",
     "Sophie Laurent"
   ],
+  // Use backend enum values for state to keep mocks consistent with server
+  state: SessionState.CREATED as SessionState,
 };
 
 // Mock quiz questions
@@ -22,7 +26,7 @@ export const MOCK_QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: "1",
     question: "Quelle est la capitale de la France ?",
-    type: "single",
+    type: QuestionType.SINGLE_CHOICE,
     timeLimit: 10,
     imageUrl: undefined,
     answers: [
@@ -35,7 +39,7 @@ export const MOCK_QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: "2",
     question: "Quels sont des langages de programmation ?",
-    type: "multiple",
+    type: QuestionType.MULTIPLE_CHOICE,
     timeLimit: 10,
     imageUrl: undefined,
     answers: [
@@ -48,7 +52,7 @@ export const MOCK_QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: "3",
     question: "Combien font 2 + 2 ?",
-    type: "single",
+    type: QuestionType.SINGLE_CHOICE,
     timeLimit: 10,
     imageUrl: undefined,
     answers: [

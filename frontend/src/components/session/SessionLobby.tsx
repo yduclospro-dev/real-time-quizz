@@ -1,11 +1,9 @@
-import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/Button";
 
 interface SessionLobbyProps {
   isTeacher: boolean;
   sessionCode: string;
   participants: string[];
-  onQuit: () => void;
   onStart: () => void;
   onCopyCode: () => void;
 }
@@ -14,17 +12,11 @@ export function SessionLobby({
   isTeacher,
   sessionCode,
   participants,
-  onQuit,
   onStart,
   onCopyCode,
 }: SessionLobbyProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-      <Header
-        title={isTeacher ? "Session - En attente" : "En attente du professeur"}
-        onQuit={onQuit}
-      />
-
+    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Session Code Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
@@ -32,7 +24,7 @@ export function SessionLobby({
             Code de la session
           </h2>
           <div
-            className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl p-6 cursor-pointer hover:scale-105 transition-transform"
+            className="bg-linear-to-r from-purple-500 to-blue-500 rounded-xl p-6 cursor-pointer hover:scale-105 transition-transform"
             onClick={onCopyCode}
           >
             <p className="text-5xl font-bold text-white text-center tracking-wider">
@@ -60,7 +52,7 @@ export function SessionLobby({
                   key={index}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 bg-linear-to-br from-purple-400 to-blue-400 rounded-full flex items-center justify-center text-white font-bold">
                     {name.charAt(0)}
                   </div>
                   <span className="text-gray-900 font-medium">{name}</span>

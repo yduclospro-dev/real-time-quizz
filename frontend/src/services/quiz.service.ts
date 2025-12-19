@@ -29,7 +29,7 @@ export const quizService = {
         id: q.id,
         question: q.text ?? '',
         imageUrl: q.image ?? undefined,
-        type: q.type === 'SINGLE_CHOICE' ? 'single' : 'multiple',
+        type: q.type,
         answers: (q.answers || []).map((a: ServerAnswerDto, idx: number) => ({
           id: a.id,
           text: a.text,
@@ -57,13 +57,12 @@ export const quizService = {
   },
 
   async createQuiz(data: CreateQuizDto): Promise<Quiz> {
-    // Transform frontend DTO to backend expected shape
     const payload = {
       title: data.title,
       questions: data.questions.map((q) => ({
         text: q.question,
         image: q.imageUrl,
-        type: q.type === 'single' ? 'SINGLE_CHOICE' : 'MULTIPLE_CHOICE',
+        type: q.type,
         timeLimit: q.timeLimit,
         answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
       })),
@@ -82,7 +81,7 @@ export const quizService = {
         questions: data.questions.map((q) => ({
           text: q.question,
           image: q.imageUrl,
-          type: q.type === 'single' ? 'SINGLE_CHOICE' : 'MULTIPLE_CHOICE',
+          type: q.type,
           timeLimit: q.timeLimit,
           answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
         })),
@@ -106,6 +105,7 @@ export const quizService = {
     const response = await apiClient.post<ApiResponse<{ sessionId: string }>>(`/quiz/${quizId}/start`);
     const payload = response.data.data;
     if (!payload || !payload.sessionId) throw new Error('Failed to start session');
+    console.log("Started session with ID:", payload?.sessionId);
     return payload;
   },
 };

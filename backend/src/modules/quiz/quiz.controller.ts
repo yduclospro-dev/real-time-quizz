@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
+import { SessionService } from '../session/session.service';
 import { CreateQuizRequest } from './requests/create-quiz.request';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponse } from '../../common/types/api-response';
@@ -22,9 +23,29 @@ import { ErrorCode } from '../../common/errors/error-codes';
 
 @Controller('quiz')
 export class QuizController {
-  constructor(private readonly quizService: QuizService) {}
+  constructor(
+    private readonly quizService: QuizService,
+    private readonly sessionService: SessionService,
+  ) {}
 
   @UseGuards(AuthGuard('jwt'))
+  @Post(':id/start')
+  async startSession(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ApiResponse<{ sessionId: string }>> {
+    if (user.role !== Role.TEACHER) {
+      throw new ApiException(
+        403,
+        ErrorCode.FORBIDDEN,
+        'Seuls les enseignants peuvent démarrer une session',
+      );
+    }
+
+    const session = await this.sessionService.createSessionForQuiz(id);
+    return successResponse({ sessionId: session.id });
+  }
+
   @Post()
   async createQuiz(
     @Body() request: CreateQuizRequest,

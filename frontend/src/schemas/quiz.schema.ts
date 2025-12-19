@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { QuestionType } from '@shared/enums/question-type';
 
 export const quizAnswerSchema = z.object({
   text: z.string().min(1, "La réponse ne peut pas être vide"),
@@ -8,7 +9,7 @@ export const quizAnswerSchema = z.object({
 
 export const quizQuestionSchema = z.object({
   question: z.string().min(1, "La question ne peut pas être vide"),
-  type: z.enum(["single", "multiple"]),
+  type: z.enum([QuestionType.SINGLE_CHOICE, QuestionType.MULTIPLE_CHOICE]),
   answers: z
     .array(quizAnswerSchema)
     .min(2, "Au moins 2 réponses sont requises")

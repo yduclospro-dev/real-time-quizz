@@ -78,8 +78,9 @@ export default function QuizListPage() {
 
   const handleStartSession = async (id: string) => {
     try {
-      await quizService.startSession(id);
-      router.push(`/quiz/${id}/session`);
+      const { sessionId } = await quizService.startSession(id);
+      router.push(`/quiz/${id}/session/${sessionId}`);
+      console.log("Session started for quiz ID:", id);
       toast.success("Session démarrée !");
     } catch (error) {
       toast.error("Erreur lors du démarrage de la session");

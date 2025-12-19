@@ -9,7 +9,9 @@ export interface QuizDto {
   questions: QuestionDto[];
 }
 
-export const quizToDto = (entity: Quiz & { questions: Question[] }): QuizDto => ({
+export const quizToDto = (
+  entity: Quiz & { questions: Question[] },
+): QuizDto => ({
   id: entity.id,
   title: entity.title,
   authorId: entity.authorId,

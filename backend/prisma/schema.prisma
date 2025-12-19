@@ -21,6 +21,7 @@ model User {
   role        Role
   createdAt   DateTime @default(now())
   quizzes     Quiz[]
+  sessionParticipants SessionParticipant[]
 }
 
 enum Role {
@@ -33,6 +34,12 @@ enum QuestionType {
   MULTIPLE_CHOICE
 }
 
+enum SessionState {
+  CREATED
+  STARTED
+  FINISHED
+}
+
 model Quiz {
   id          String   @id @default(uuid())
   title       String
@@ -40,6 +47,39 @@ model Quiz {
   author      User     @relation(fields: [authorId], references: [id])
   authorId    String
   questions   Question[]
+  sessions Session[]
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  quiz       Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId     String
+  state      SessionState @default(CREATED)
+  createdAt  DateTime @default(now())
+  startedAt  DateTime?
+  currentQuestionIndex Int @default(0)
+  currentQuestionEndsAt DateTime?
+  endedAt    DateTime?
+  participants SessionParticipant[]
+
+  answerSubmissions AnswerSubmission[]
+}
+
+model SessionParticipant {
+  id           String   @id @default(uuid())
+  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId    String
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  displayName  String
+  joinedAt     DateTime @default(now())
+  lastSeen     DateTime?
+  isConnected  Boolean  @default(true)
+  participantToken String?
+
+  @@unique([sessionId, userId])
+  answerSubmissions AnswerSubmission[]
 }
 
 model Question {
@@ -47,19 +87,33 @@ model Question {
   text      String
   type      QuestionType
   image     String? 
-  // time limit for the question in seconds (default: 30)
   timeLimit Int @default(30)
   quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
   quizId    String
   createdAt DateTime @default(now())
   answers   Answer[]
+
+  answerSubmissions AnswerSubmission[]
 }
 
 model Answer {
-  id         String   @id @default(uuid())
+    id         String   @id @default(uuid())
     text       String
     isCorrect  Boolean
     createdAt  DateTime @default(now())
     question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
     questionId String
+}
+
+model AnswerSubmission {
+  id             String   @id @default(uuid())
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId      String
+  participant    SessionParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId  String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  questionId     String
+  selectedAnswerIds Json
+  submittedAt    DateTime @default(now())
+  isFinal        Boolean  @default(true)
 }

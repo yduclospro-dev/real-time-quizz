@@ -141,7 +141,7 @@ export default function QuizCreatePage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onConfirm={handleConfirmQuestionSettings}
-          initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : "single"}
+            initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : undefined}
           initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : 30}
         />
 

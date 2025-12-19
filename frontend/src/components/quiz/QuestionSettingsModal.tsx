@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { QuestionType } from '@shared/enums/question-type';
 import { Button } from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 
 interface QuestionSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (type: "single" | "multiple", timeLimit: number) => void;
-  initialType?: "single" | "multiple";
+  onConfirm: (type: QuestionType, timeLimit: number) => void;
+  initialType?: QuestionType;
   initialTimeLimit?: number;
 }
 
@@ -16,10 +17,10 @@ export default function QuestionSettingsModal({
   isOpen,
   onClose,
   onConfirm,
-  initialType = "single",
+  initialType = QuestionType.SINGLE_CHOICE,
   initialTimeLimit = 30,
 }: QuestionSettingsModalProps) {
-  const [type, setType] = useState<"single" | "multiple">(initialType);
+  const [type, setType] = useState<QuestionType>(initialType);
   const [timeLimit, setTimeLimit] = useState(initialTimeLimit);
 
   const handleConfirm = () => {
@@ -40,9 +41,9 @@ export default function QuestionSettingsModal({
               <input
                 type="radio"
                 name="questionType"
-                value="single"
-                checked={type === "single"}
-                onChange={(e) => setType(e.target.value as "single" | "multiple")}
+                value={QuestionType.SINGLE_CHOICE}
+                checked={type === QuestionType.SINGLE_CHOICE}
+                onChange={() => setType(QuestionType.SINGLE_CHOICE)}
                 className="mr-3"
               />
               <div>
@@ -54,9 +55,9 @@ export default function QuestionSettingsModal({
               <input
                 type="radio"
                 name="questionType"
-                value="multiple"
-                checked={type === "multiple"}
-                onChange={(e) => setType(e.target.value as "single" | "multiple")}
+                value={QuestionType.MULTIPLE_CHOICE}
+                checked={type === QuestionType.MULTIPLE_CHOICE}
+                onChange={() => setType(QuestionType.MULTIPLE_CHOICE)}
                 className="mr-3"
               />
               <div>

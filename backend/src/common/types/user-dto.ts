@@ -1,16 +1,25 @@
-import { User, Role as PrismaRole } from '@prisma/client';
+import { Role as PrismaRole } from '@prisma/client';
 import { Role } from '@shared/enums/role';
-import type { UserDto } from '@shared/types/user-dto';
-export type { UserDto } from '@shared/types/user-dto';
 
-export const userToDto = (entity: User): UserDto => ({
-  id: entity.id,
-  lastName: entity.lastName,
-  firstName: entity.firstName,
-  email: entity.email,
-  role: mapRole(entity.role),
-  createdAt: entity.createdAt,
-});
+export interface UserDto {
+  id: string;
+  lastName: string;
+  firstName: string;
+  email: string;
+  role: Role;
+  createdAt: Date;
+}
+
+export const userToDto = (user: any): UserDto => {
+  return {
+    id: user.id,
+    lastName: user.lastName,
+    firstName: user.firstName,
+    email: user.email,
+    role: mapRole(user.role),
+    createdAt: user.createdAt,
+  };
+};
 
 export const mapRole = (role: PrismaRole): Role => {
   switch (role) {

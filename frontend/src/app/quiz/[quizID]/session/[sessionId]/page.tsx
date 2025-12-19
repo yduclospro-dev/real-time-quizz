@@ -1,26 +1,24 @@
 "use client";
 
-import { useParams } from "next/navigation";
 import { ConfirmQuitSessionModal } from "@/components/session/ConfirmQuitSessionModal";
 import { SessionLobby } from "@/components/session/SessionLobby";
 import { SessionInProgress } from "@/components/session/SessionInProgress";
 import { SessionBetweenQuestions } from "@/components/session/SessionBetweenQuestions";
 import { SessionFinished } from "@/components/session/SessionFinished";
 import { useQuizSession } from "@/hooks/useQuizSession";
+import { SessionState } from '../../../../../../../shared/enums/session-state';
 
 /**
  * Session orchestrator - renders the appropriate component based on session state.
  * All logic and state management is in useQuizSession hook.
  */
 export default function SessionPage() {
-  const params = useParams();
-  const quizID = params.quizID as string;
-
   const {
     sessionState,
     sessionCode,
     participants,
     isTeacher,
+    isBetweenQuestions,
     questions,
     currentQuestionIndex,
     timeLeft,
@@ -40,23 +38,23 @@ export default function SessionPage() {
     copySessionCode,
     handleQuitSession,
     handleConfirmQuit,
-  } = useQuizSession(quizID);
+  } = useQuizSession();
 
   // Render state-specific components
-  let content;
+  let content: React.ReactNode = null;
 
-  if (sessionState === "lobby") {
+  // sessionState is a shared enum (CREATED/STARTED/FINISHED). We use a local flag for between-questions in the hook.
+  if (sessionState === SessionState.CREATED) {
     content = (
       <SessionLobby
         isTeacher={isTeacher}
         sessionCode={sessionCode}
         participants={participants}
-        onQuit={handleQuitSession}
         onStart={handleStartQuiz}
         onCopyCode={copySessionCode}
       />
     );
-  } else if (sessionState === "in-progress") {
+  } else if (sessionState === SessionState.STARTED && !isBetweenQuestions) {
     const currentQuestion = questions[currentQuestionIndex];
     content = (
       <SessionInProgress
@@ -73,7 +71,7 @@ export default function SessionPage() {
         onAnswerSelect={handleAnswerSelect}
       />
     );
-  } else if (sessionState === "between-questions") {
+  } else if (sessionState === SessionState.STARTED && isBetweenQuestions) {
     const currentQuestion = questions[currentQuestionIndex];
     content = (
       <SessionBetweenQuestions
@@ -88,7 +86,7 @@ export default function SessionPage() {
         onQuit={handleQuitSession}
       />
     );
-  } else if (sessionState === "finished") {
+  } else if (sessionState === SessionState.FINISHED) {
     content = (
       <SessionFinished
         isTeacher={isTeacher}

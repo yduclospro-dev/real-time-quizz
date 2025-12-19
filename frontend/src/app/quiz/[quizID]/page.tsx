@@ -20,6 +20,8 @@ import type { ApiError } from '@/lib/api-client';
 import { useGlobalError } from '@/providers/ReactQueryProvider';
 import { useFieldErrorContext } from '@/contexts/FieldErrorContext';
 import { createQuizSchema } from '@/schemas/quiz.schema';
+import { useAuth } from '@/hooks/useAuth';
+import { Role } from "@shared/enums/role";
 
 export default function QuizEditorPage() {
   const params = useParams();
@@ -105,6 +107,7 @@ export default function QuizEditorPage() {
 
   const router = useRouter();
   const { setFieldErrorsFromApiError } = useFieldErrorContext();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (isQueryError) {
@@ -192,6 +195,24 @@ export default function QuizEditorPage() {
             <Button variant="outline" onClick={handleExit}>
               Quitter
             </Button>
+            {user?.role === Role.TEACHER && (
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    const resp = await quizService.startSession(quizID);
+                    console.log('Started session with response:', resp.sessionId);
+                    toast.success('Session démarrée');
+                    router.push(`/quiz/${quizID}/session?sessionId=${resp.sessionId}`);
+                  } catch (e) {
+                    console.error('Failed to start session', e);
+                    toast.error('Impossible de démarrer la session');
+                  }
+                }}
+              >
+                Démarrer la session
+              </Button>
+            )}
             <Button onClick={handleSaveQuiz}>
               Enregistrer
             </Button>
@@ -250,7 +271,7 @@ export default function QuizEditorPage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onConfirm={handleConfirmQuestionSettings}
-          initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : "single"}
+            initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : undefined}
           initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : 30}
         />
 
