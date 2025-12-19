@@ -70,7 +70,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 function mapPrismaError(
   exception: Prisma.PrismaClientKnownRequestError,
 ): ApiException {
-  console.error('Prisma Exception:', exception);
   switch (exception.code) {
     case 'P2002':
       return new ApiException(

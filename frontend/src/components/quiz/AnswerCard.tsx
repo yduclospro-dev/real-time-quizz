@@ -3,12 +3,13 @@
 import { X } from "lucide-react";
 import { useFieldError } from '@/hooks/useFieldError';
 import { QuizAnswer } from "@/types/quiz.types";
+import { QuestionType } from '@shared/enums/question-type';
 
 interface AnswerCardProps {
   answer: QuizAnswer;
   index: number;
   questionIndex?: number;
-  questionType: "single" | "multiple";
+  questionType: QuestionType;
   questionId: string;
   canDelete: boolean;
   onTextChange: (text: string) => void;
@@ -48,7 +49,7 @@ export default function AnswerCard({
         }`}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="text-2xl font-bold flex-shrink-0">
+          <div className="text-2xl font-bold shrink-0">
             {getAnswerLabel(index)}
           </div>
           <div className="flex-1">
@@ -65,10 +66,10 @@ export default function AnswerCard({
               <p className="mt-1 text-xs text-white">{useFieldError(`questions.${questionIndex}.answers.${index}.text`)}</p>
             )}
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 shrink-0">
             <input
-              type={questionType === "single" ? "radio" : "checkbox"}
-              name={questionType === "single" ? `correct-answer-${questionId}` : undefined}
+              type={questionType === QuestionType.SINGLE_CHOICE ? "radio" : "checkbox"}
+              name={questionType === QuestionType.SINGLE_CHOICE ? `correct-answer-${questionId}` : undefined}
               checked={answer.isCorrect}
               onChange={onToggleCorrect}
               className="w-5 h-5 cursor-pointer"

@@ -1,4 +1,5 @@
 import { QuizQuestion } from "@/types/quiz.types";
+import { QuestionType } from '@shared/enums/question-type';
 
 interface StudentQuestionViewProps {
   question: QuizQuestion;
@@ -24,7 +25,7 @@ export function StudentQuestionView({
   selectedAnswers,
   onAnswerSelect,
 }: StudentQuestionViewProps) {
-  const isMultipleChoice = question.type === "multiple";
+  const isMultipleChoice = question.type === QuestionType.MULTIPLE_CHOICE;
 
   const isSelected = (answerId: string) => selectedAnswers.includes(answerId);
 

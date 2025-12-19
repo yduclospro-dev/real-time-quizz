@@ -4,6 +4,7 @@ import { Trash2, Image, Clock } from "lucide-react";
 import { QuizQuestion, QuizAnswer } from "@/types/quiz.types";
 import { useId, useRef } from "react";
 import AnswerCard from "./AnswerCard";
+import { QuestionType } from '@shared/enums/question-type';
 import { useFieldError } from '@/hooks/useFieldError';
 
 interface QuestionEditorProps {
@@ -36,7 +37,7 @@ export default function QuestionEditor({
   };
 
   const handleSetCorrect = (answerId: string) => {
-    if (question.type === "single") {
+    if (question.type === QuestionType.SINGLE_CHOICE) {
       // Single answer - radio behavior
       const updatedAnswers = question.answers.map((answer) => ({
         ...answer,
@@ -143,12 +144,12 @@ export default function QuestionEditor({
       {/* Answer Grid */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         {question.answers.map((answer, index) => (
-          <AnswerCard
+            <AnswerCard
             key={answer.id}
             answer={answer}
             index={index}
             questionIndex={qIndex}
-            questionType={question.type}
+              questionType={question.type}
             questionId={question.id}
             canDelete={question.answers.length > 2}
             onTextChange={(text) => handleAnswerChange(answer.id, text)}

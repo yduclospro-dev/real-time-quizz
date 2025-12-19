@@ -6,11 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Header } from "@/components/layout/Header";
 import toast from "react-hot-toast";
+import { sessionService } from "@/services/session.service";
+import { useAuth } from '@/hooks/useAuth';
 
 export default function JoinSessionPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const handleJoin = async () => {
     if (!code.trim()) {
@@ -19,23 +22,24 @@ export default function JoinSessionPage() {
     }
 
     try {
+      if (!user) {
+        toast.error('Vous devez vous connecter pour rejoindre une session');
+        router.push('/login');
+        return;
+      }
       setIsLoading(true);
-      // TODO BACKEND: POST /api/sessions/join
-      // Body: { sessionCode: string }
-      // Response: { sessionId: string, quizId: string }
-      // Then redirect to /quiz/:quizId/session
-      // For now, mock: just redirect to session page
-      router.push(`/quiz/${code}/session`);
+      const res = await sessionService.join(code);
+      router.push(`/quiz/${res.quizId}/session?sessionId=${res.sessionId}`);
     } catch (error) {
-      toast.error("Code de session invalide");
       console.error("Failed to join session:", error);
+      toast.error("Code de session invalide");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
+    <div className="min-h-screen bg-linear-to-br from-purple-100 to-blue-100">
       <Header title="Rejoindre une session" />
 
       <div className="flex items-center justify-center px-4 py-20">

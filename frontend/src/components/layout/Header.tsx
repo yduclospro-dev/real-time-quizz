@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { useAuth } from '@/hooks/useAuth';
 
-export function Header({ title, showUser = true }: { title?: string; children?: React.ReactNode; showUser?: boolean }) {
+export function Header({ title, showUser = true, onQuit }: { title?: string; children?: React.ReactNode; showUser?: boolean; onQuit?: () => void }) {
   const { user, logout, isLoading } = useAuth();
 
   return (
@@ -20,6 +20,11 @@ export function Header({ title, showUser = true }: { title?: string; children?: 
                 <div className="font-medium">{user.firstName} {user.lastName}</div>
                 <div className="text-xs text-gray-500">{user.email}</div>
               </div>
+              {onQuit && (
+                <Button variant="outline" onClick={onQuit} className="ml-2">
+                  Quitter
+                </Button>
+              )}
               <Button variant="outline" onClick={() => logout()} disabled={isLoading}>
                 Déconnexion
               </Button>

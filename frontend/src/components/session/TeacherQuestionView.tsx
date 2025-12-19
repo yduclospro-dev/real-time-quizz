@@ -1,4 +1,5 @@
 import { QuizQuestion } from "@/types/quiz.types";
+import { QuestionType } from '@shared/enums/question-type';
 
 interface StudentAnswer {
   studentName: string;
@@ -77,7 +78,7 @@ export function TeacherQuestionView({
 
         {/* Type indicator */}
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-          {question.type === "multiple" ? "Choix multiples" : "Choix unique"}
+          {question.type === QuestionType.MULTIPLE_CHOICE ? "Choix multiples" : "Choix unique"}
         </div>
       </div>
 

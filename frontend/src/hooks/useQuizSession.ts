@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { QuizQuestion } from "@/types/quiz.types";
 import toast from "react-hot-toast";
-
-type SessionState = "lobby" | "in-progress" | "between-questions" | "finished";
+import { QuestionType } from '../../../shared/enums/question-type';
+import { SessionState as SharedSessionState } from '../../../shared/enums/session-state';
+import { sessionService } from '@/services/session.service';
+import type { ServerSessionDto } from '@/types/session.types';
 
 interface StudentAnswer {
   studentName: string;
@@ -23,13 +25,19 @@ interface FinalResult {
   totalQuestions: number;
 }
 
-export function useQuizSession(quizID: string) {
+export function useQuizSession() {
   const router = useRouter();
+  const params = useParams();
+  const sessionId = params.sessionId as string;
+  const quizId = params.quizId as string;
 
   // ============================================
   // STATE: Session Connection & User Role
   // ============================================
-  const [sessionState, setSessionState] = useState<SessionState>("lobby");
+  // Use shared enum for persisted session state (CREATED / STARTED / FINISHED)
+  const [sessionState, setSessionState] = useState<SharedSessionState>(SharedSessionState.CREATED);
+  // Local transient flag for UI between-questions state
+  const [isBetweenQuestions, setIsBetweenQuestions] = useState(false);
   const [sessionCode, setSessionCode] = useState("");
   const [participants, setParticipants] = useState<string[]>([]);
   const [isTeacher, setIsTeacher] = useState(false); // TODO: Get from auth context
@@ -75,45 +83,48 @@ export function useQuizSession(quizID: string) {
     // TODO BACKEND: Listen for PARTICIPANT_JOINED, QUIZ_STARTED, QUESTION_START, etc.
     // See: /mocks/sessionMockData.ts for WebSocket event structure
     loadSession();
-  }, [quizID]);
+  });
 
   // ============================================
   // TIMER MANAGEMENT
   // ============================================
   useEffect(() => {
-    if (sessionState === "in-progress" && timeLeft > 0) {
+    // Run question timer only when session is started and we're not in the between-questions pause
+    if (sessionState === SharedSessionState.STARTED && !isBetweenQuestions && timeLeft > 0) {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (sessionState === "in-progress" && timeLeft === 0) {
+    } else if (sessionState === SharedSessionState.STARTED && !isBetweenQuestions && timeLeft === 0) {
       handleQuestionTimeout();
     }
-  }, [sessionState, timeLeft]);
+  }, [sessionState, timeLeft, isBetweenQuestions]);
 
   useEffect(() => {
-    if (sessionState === "between-questions" && pauseTimeLeft > 0) {
+    if (isBetweenQuestions && pauseTimeLeft > 0) {
       const timer = setTimeout(() => setPauseTimeLeft(pauseTimeLeft - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [sessionState, pauseTimeLeft]);
+  }, [isBetweenQuestions, pauseTimeLeft]);
 
   // ============================================
   // SESSION INITIALIZATION
   // ============================================
   const loadSession = async () => {
     try {
-      // TODO BACKEND: GET /api/sessions/:sessionId
-      // Mock data for development
-      import("@/mocks/sessionMockData").then(
-        ({ MOCK_SESSION, MOCK_QUIZ_QUESTIONS, MOCK_FINAL_RESULTS }) => {
-          setSessionCode(MOCK_SESSION.sessionCode);
-          setParticipants(MOCK_SESSION.participants);
-          setQuestions(MOCK_QUIZ_QUESTIONS);
-          setTimeLeft(MOCK_QUIZ_QUESTIONS[0]?.timeLimit || 30);
-          setLiveScores(MOCK_FINAL_RESULTS);
-        }
-      );
+      // Read sessionId from URL query param
+      const url = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+      console.log("Current URL:", url?.href);
+      // Require a sessionId in the URL and call the backend API to get session details
+      if (!sessionId) {
+        throw new Error('Missing sessionId in URL');
+      }
+
+      const raw = await sessionService.get(sessionId);
+      console.log("Loaded session data:", raw);
+      // payload can be either { session, quiz, finalResults } or a flat ServerSessionDto
+      
+      setSessionCode(raw.code);
+
     } catch (error) {
-      console.error("Error loading session:", error);
       toast.error("Erreur lors du chargement de la session");
     }
   };
@@ -124,7 +135,8 @@ export function useQuizSession(quizID: string) {
   const handleStartQuiz = () => {
     // TODO BACKEND: Emit START_QUIZ WebSocket event (teacher only)
     // All clients should receive QUIZ_STARTED event
-    setSessionState("in-progress");
+    setSessionState(SharedSessionState.STARTED);
+    setIsBetweenQuestions(false);
     setTimeLeft(questions[0]?.timeLimit || 30);
 
     // TODO BACKEND: Listen for ANSWER_RECEIVED event to update real-time stats
@@ -138,7 +150,7 @@ export function useQuizSession(quizID: string) {
 
   const handleAnswerSelect = (answerId: string) => {
     const currentQuestion = questions[currentQuestionIndex];
-    if (currentQuestion.type === "single") {
+    if (currentQuestion.type === QuestionType.SINGLE_CHOICE) {
       setSelectedAnswers([answerId]);
     } else {
       setSelectedAnswers((prev) =>
@@ -187,21 +199,23 @@ export function useQuizSession(quizID: string) {
     // Update liveScores state with the new scores
     // Example: setLiveScores(event.scores);
 
-    setSessionState("between-questions");
+    setIsBetweenQuestions(true);
     setPauseTimeLeft(10);
 
     // Mock: Auto-advance to next question after 10 seconds
-    setTimeout(() => {
+      setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setSelectedAnswers([]);
         setStudentAnswers([]);
         setStudentResults([]);
         setTimeLeft(questions[currentQuestionIndex + 1]?.timeLimit || 30);
-        setSessionState("in-progress");
+        setIsBetweenQuestions(false);
+        setSessionState(SharedSessionState.STARTED);
       } else {
         // Quiz finished
-        setSessionState("finished");
+        setIsBetweenQuestions(false);
+        setSessionState(SharedSessionState.FINISHED);
         // TODO BACKEND: Receive QUIZ_END event with final results
         // For now, using mock data
         import("@/mocks/sessionMockData").then(({ MOCK_FINAL_RESULTS }) => {
@@ -242,6 +256,7 @@ export function useQuizSession(quizID: string) {
     sessionCode,
     participants,
     isTeacher,
+    isBetweenQuestions,
     questions,
     currentQuestionIndex,
     timeLeft,

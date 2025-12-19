@@ -1,5 +1,6 @@
 import { useCallback, useReducer, useState, useId, useRef } from "react";
 import { QuizQuestion } from "@/types/quiz.types";
+import { QuestionType } from "@shared/enums/question-type";
 
 type Action =
   | { type: "SET_QUESTIONS"; payload: QuizQuestion[] }
@@ -50,7 +51,7 @@ export function useQuizEditor(initial?: QuizQuestion[]) {
     return {
       id: idBase,
       question: "",
-      type: "single",
+      type: QuestionType.SINGLE_CHOICE,
       timeLimit: 30,
       answers: [
         { id: idBase + "-1", text: "", isCorrect: false, color: "red" },
@@ -67,7 +68,7 @@ export function useQuizEditor(initial?: QuizQuestion[]) {
     return {
       id: idBase,
       question: "",
-      type: "single",
+      type: QuestionType.SINGLE_CHOICE,
       timeLimit: 30,
       answers: [
         { id: idBase + "-1", text: "", isCorrect: false, color: "red" },
@@ -101,7 +102,7 @@ export function useQuizEditor(initial?: QuizQuestion[]) {
     setIsModalOpen(true);
   }, []);
 
-  const handleConfirmQuestionSettings = useCallback((type: "single" | "multiple", timeLimit: number) => {
+  const handleConfirmQuestionSettings = useCallback((type: QuestionType, timeLimit: number) => {
     if (editingQuestionIndex !== null) {
       dispatch({ type: "EDIT_QUESTION_SETTINGS", index: editingQuestionIndex, payload: { type, timeLimit } });
     } else {

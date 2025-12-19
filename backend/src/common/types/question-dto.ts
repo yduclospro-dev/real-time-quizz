@@ -18,6 +18,6 @@ export const questionToDto = (
   text: entity.text,
   type: entity.type as QuestionType,
   image: entity.image,
-  timeLimit: (entity.timeLimit ?? 30),
+  timeLimit: entity.timeLimit ?? 30,
   answers: (entity.answers ?? []).map(answerToDto),
 });
