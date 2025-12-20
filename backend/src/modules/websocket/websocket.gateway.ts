@@ -33,15 +33,35 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
     console.log(`Client connected: ${client.id}`);
   }
 
-  handleDisconnect(client: Socket) {
+  async handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
     const sessionId = this.userSessions.get(client.id);
     if (sessionId) {
       this.userSessions.delete(client.id);
+      
       // Notify others in the room
       this.server.to(sessionId).emit('participant:disconnected', {
         socketId: client.id,
       });
+
+      // Check if room is now empty
+      const room = this.server.sockets.adapter.rooms.get(sessionId);
+      const roomSize = room?.size || 0;
+      
+      if (roomSize === 0) {
+        console.log(`Session ${sessionId} is now empty. Cleaning up timers...`);
+        
+        // Clear any active timers for this session
+        const timer = this.sessionTimers.get(sessionId);
+        if (timer) {
+          clearInterval(timer);
+          this.sessionTimers.delete(sessionId);
+          console.log(`Cleared timer for session ${sessionId}`);
+        }
+        
+        // DO NOT auto-finish - teacher might rejoin to continue or restart
+        // Session will be finished when teacher completes quiz flow normally
+      }
     }
   }
 

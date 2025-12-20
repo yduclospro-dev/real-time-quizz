@@ -15,6 +15,8 @@ const ANSWER_COLORS = {
   blue: "bg-blue-500 hover:bg-blue-600 border-blue-600",
   yellow: "bg-yellow-500 hover:bg-yellow-600 border-yellow-600",
   green: "bg-green-500 hover:bg-green-600 border-green-600",
+  purple: "bg-purple-500 hover:bg-purple-600 border-purple-600",
+  orange: "bg-orange-500 hover:bg-orange-600 border-orange-600",
 };
 
 export function StudentQuestionView({

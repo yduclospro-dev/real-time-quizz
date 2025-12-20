@@ -14,6 +14,8 @@ const ANSWER_COLORS = {
   blue: "border-blue-500",
   yellow: "border-yellow-500",
   green: "border-green-500",
+  purple: "border-purple-500",
+  orange: "border-orange-500",
 };
 
 export function QuestionResults({

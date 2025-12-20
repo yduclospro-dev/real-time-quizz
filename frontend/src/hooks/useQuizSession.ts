@@ -147,13 +147,13 @@ export function useQuizSession() {
     });
 
     // Session started event
-    socket.on('session:started', (session: any) => {
+    const handleSessionStarted = (session: any) => {
       setSessionState(SharedSessionState.STARTED);
-      toast.success('Quiz démarré !');
-    });
+      toast.success('Quiz démarré !', { id: `session-started-${sessionId}` });
+    };
 
     // Question advanced event
-    socket.on('question:advanced', (data: any) => {
+    const handleQuestionAdvanced = (data: any) => {
       setCurrentQuestionIndex(data.currentQuestionIndex);
       setIsBetweenQuestions(false);
       setSelectedAnswers([]);
@@ -181,15 +181,15 @@ export function useQuizSession() {
           setTimeLeft(data.question.timeLimit);
         }
       }
-    });
+    };
 
     // Timer update from server (every second)
-    socket.on('timer:update', (data: any) => {
+    const handleTimerUpdate = (data: any) => {
       setTimeLeft(data.timeLeft);
-    });
+    };
 
     // Timer expired
-    socket.on('timer:expired', (data: any) => {
+    const handleTimerExpired = (data: any) => {
       // Use refs to get CURRENT state values (avoid stale closure)
       const currentParticipants = participantsRef.current;
       const currentStudentAnswers = studentAnswersRef.current;
@@ -237,11 +237,10 @@ export function useQuizSession() {
       // Show between-questions state
       setIsBetweenQuestions(true);
       setPauseTimeLeft(10);
-    });
+    };
 
     // Scores update from server (after each question)
-    // THIS IS THE ONLY PLACE THAT UPDATES LIVESCORES
-    socket.on('scores:update', (data: any) => {
+    const handleScoresUpdate = (data: any) => {
       if (data.scores && Array.isArray(data.scores)) {
         const newScores = data.scores.map((s: any) => ({
           studentName: s.displayName,
@@ -252,51 +251,75 @@ export function useQuizSession() {
         // Complete replacement - single source of truth for scores
         setLiveScores(newScores);
       }
-    });
+    };
 
     // Answer confirmed (for student)
-    socket.on('answer:confirmed', (data: any) => {
+    const handleAnswerConfirmed = (data: any) => {
       // Don't update score here - would reveal if answer is correct!
-    });
+    };
 
     // Question stats (for teacher real-time view)
-    socket.on('question:stats', (stats: any) => {
+    const handleQuestionStats = (stats: any) => {
       if (stats.submissions) {
         setStudentAnswers(stats.submissions.map((sub: any) => ({
           studentName: sub.displayName,
           selectedAnswers: sub.selectedAnswerIds,
         })));
       }
-    });
+    };
 
     // Session finished event (triggers REST fetch)
-    socket.on('session:finished', async (session: any) => {
+    const handleSessionFinished = async (session: any) => {
       setSessionState(SharedSessionState.FINISHED);
       // Fetch final results via REST
       await loadResults();
-    });
+    };
 
     // Participant joined
-    socket.on('participant:joined', (data: any) => {
+    const handleParticipantJoined = (data: any) => {
       if (data.participants) {
         setParticipants(data.participants.map((p: any) => p.displayName));
         // DO NOT update liveScores here - ONLY scores:update event does that
       }
-    });
+    };
 
     // Participant disconnected
-    socket.on('participant:disconnected', (data: any) => {
+    const handleParticipantDisconnected = (data: any) => {
       // Participant list updated via participant:joined event
-    });
+    };
 
     // Error handling
-    socket.on('error', (error: any) => {
+    const handleError = (error: any) => {
       console.error('WebSocket error:', error);
       toast.error(error.message || 'Une erreur est survenue');
-    });
+    };
 
-    // Cleanup on unmount
+    // Register all event listeners
+    socket.on('session:started', handleSessionStarted);
+    socket.on('question:advanced', handleQuestionAdvanced);
+    socket.on('timer:update', handleTimerUpdate);
+    socket.on('timer:expired', handleTimerExpired);
+    socket.on('scores:update', handleScoresUpdate);
+    socket.on('answer:confirmed', handleAnswerConfirmed);
+    socket.on('question:stats', handleQuestionStats);
+    socket.on('session:finished', handleSessionFinished);
+    socket.on('participant:joined', handleParticipantJoined);
+    socket.on('participant:disconnected', handleParticipantDisconnected);
+    socket.on('error', handleError);
+
+    // Cleanup on unmount - remove ALL listeners
     return () => {
+      socket.off('session:started', handleSessionStarted);
+      socket.off('question:advanced', handleQuestionAdvanced);
+      socket.off('timer:update', handleTimerUpdate);
+      socket.off('timer:expired', handleTimerExpired);
+      socket.off('scores:update', handleScoresUpdate);
+      socket.off('answer:confirmed', handleAnswerConfirmed);
+      socket.off('question:stats', handleQuestionStats);
+      socket.off('session:finished', handleSessionFinished);
+      socket.off('participant:joined', handleParticipantJoined);
+      socket.off('participant:disconnected', handleParticipantDisconnected);
+      socket.off('error', handleError);
       socket.disconnect();
       socketRef.current = null;
     };
