@@ -30,6 +30,7 @@ export default function QuizCreatePage() {
     isModalOpen,
     setIsModalOpen,
     editingQuestionIndex,
+    setEditingQuestionIndex,
     handleAddQuestion,
     handleEditQuestionSettings,
     handleConfirmQuestionSettings,
@@ -139,7 +140,10 @@ export default function QuizCreatePage() {
 
         <QuestionSettingsModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingQuestionIndex(null);
+          }}
           onConfirm={handleConfirmQuestionSettings}
             initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : undefined}
           initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : 30}

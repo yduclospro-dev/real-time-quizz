@@ -8,11 +8,18 @@ interface FinalResult {
   totalQuestions: number;
 }
 
+interface UserAnswer {
+  questionId: string;
+  selectedAnswerIds: string[];
+  isCorrect: boolean;
+}
+
 interface SessionFinishedProps {
   isTeacher: boolean;
   questions: QuizQuestion[];
   finalResults: FinalResult[];
   userScore: number;
+  userAnswers: UserAnswer[];
   showCorrection: boolean;
   onToggleCorrection: (show: boolean) => void;
 }
@@ -22,6 +29,7 @@ export function SessionFinished({
   questions,
   finalResults,
   userScore,
+  userAnswers,
   showCorrection,
   onToggleCorrection,
 }: SessionFinishedProps) {
@@ -117,17 +125,10 @@ export function SessionFinished({
                       Récapitulatif
                     </h3>
                     {questions.map((question, index) => {
-                      // TODO BACKEND: Get actual student answers from session data
-                      // For now, using mock data - assuming student selected first answer
-                      const studentAnswers = index === 0 ? ["1"] : [];
-                      const correctAnswerIds = question.answers
-                        .filter((a) => a.isCorrect)
-                        .map((a) => a.id);
-                      const isCorrect =
-                        studentAnswers.length === correctAnswerIds.length &&
-                        studentAnswers.every((id) =>
-                          correctAnswerIds.includes(id)
-                        );
+                      // Get actual user answer from backend
+                      const userAnswer = userAnswers.find(a => a.questionId === question.id);
+                      const studentAnswerIds = userAnswer?.selectedAnswerIds || [];
+                      const isCorrect = userAnswer?.isCorrect || false;
 
                       return (
                         <div
@@ -173,8 +174,8 @@ export function SessionFinished({
                                         : "text-gray-900"
                                     }`}
                                   >
-                                    {studentAnswers.length > 0
-                                      ? studentAnswers
+                                    {studentAnswerIds.length > 0
+                                      ? studentAnswerIds
                                           .map(
                                             (id) =>
                                               question.answers.find(

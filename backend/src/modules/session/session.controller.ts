@@ -77,4 +77,45 @@ export class SessionController {
     const state = await this.sessionService.getSessionState(id);
     return successResponse(state);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/start')
+  async start(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ApiResponse<SessionDto>> {
+    const session = await this.sessionService.startQuiz(id, user.sub);
+    return successResponse(session);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/quiz')
+  async quiz(@Param('id') id: string): Promise<ApiResponse<any>> {
+    const quiz = await this.sessionService.getQuizForSession(id);
+    return successResponse(quiz);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/results')
+  async results(@Param('id') id: string): Promise<ApiResponse<any>> {
+    const results = await this.sessionService.getResults(id);
+    return successResponse(results);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/finish')
+  async finish(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ApiResponse<SessionDto>> {
+    const session = await this.sessionService.finishSession(id, user.sub);
+    return successResponse(session);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/question-stats')
+  async questionStats(@Param('id') id: string): Promise<ApiResponse<any>> {
+    const stats = await this.sessionService.getCurrentQuestionStats(id);
+    return successResponse(stats);
+  }
 }

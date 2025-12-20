@@ -28,7 +28,7 @@ export default function JoinSessionPage() {
       }
       setIsLoading(true);
       const res = await sessionService.join(code);
-      router.push(`/quiz/${res.quizId}/session?sessionId=${res.sessionId}`);
+      router.push(`/quiz/${res.quizId}/session/${res.sessionId}`);
     } catch (error) {
       console.error("Failed to join session:", error);
       toast.error("Code de session invalide");

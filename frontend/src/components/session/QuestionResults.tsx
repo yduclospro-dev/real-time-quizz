@@ -54,16 +54,15 @@ export function QuestionResults({
 
       {/* Answers */}
       <div className="grid grid-cols-2 gap-4">
-        {question.answers.map((answer) => {
-          const colorClass = ANSWER_COLORS[answer.color as keyof typeof ANSWER_COLORS];
+        {question.answers.map((answer, index) => {
+          const colors = Object.values(ANSWER_COLORS);
+          const colorClass = colors[index % colors.length];
           const isCorrectAnswer = answer.isCorrect;
           const wasSelected = userAnswers.includes(answer.id);
           
           // Get background color with low opacity
-          const bgColorClass = answer.color === 'red' ? 'bg-red-500/20' :
-                               answer.color === 'blue' ? 'bg-blue-500/20' :
-                               answer.color === 'yellow' ? 'bg-yellow-500/20' :
-                               'bg-green-500/20';
+          const bgColors = ['bg-red-500/20', 'bg-blue-500/20', 'bg-yellow-500/20', 'bg-green-500/20'];
+          const bgColorClass = bgColors[index % bgColors.length];
 
           return (
             <div

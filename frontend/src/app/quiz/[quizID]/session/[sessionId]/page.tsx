@@ -21,6 +21,7 @@ export default function SessionPage() {
     isTeacher,
     isBetweenQuestions,
     questions,
+    currentQuestion: currentQuestionFromHook,
     currentQuestionIndex,
     timeLeft,
     selectedAnswers,
@@ -28,6 +29,7 @@ export default function SessionPage() {
     studentResults,
     finalResults,
     userScore,
+    userAnswers,
     showQuitModal,
     pauseTimeLeft,
     liveScores,
@@ -40,6 +42,9 @@ export default function SessionPage() {
     handleQuitSession,
     handleConfirmQuit,
   } = useQuizSession();
+
+  // Use currentQuestion from hook for instant updates, fallback to array
+  const currentQuestion = currentQuestionFromHook || questions[currentQuestionIndex];
 
   // Render state-specific components
   let content: React.ReactNode = null;
@@ -60,7 +65,6 @@ export default function SessionPage() {
       />
     );
   } else if (sessionState === SessionState.STARTED && !isBetweenQuestions) {
-    const currentQuestion = questions[currentQuestionIndex];
     showHeader = true;
     headerTitle = `Question ${currentQuestionIndex + 1}/${questions.length}`;
     content = (
@@ -78,7 +82,6 @@ export default function SessionPage() {
       />
     );
   } else if (sessionState === SessionState.STARTED && isBetweenQuestions) {
-    const currentQuestion = questions[currentQuestionIndex];
     showHeader = true;
     headerTitle = 'Résultat';
     content = (
@@ -102,6 +105,7 @@ export default function SessionPage() {
         questions={questions}
         finalResults={finalResults}
         userScore={userScore}
+        userAnswers={userAnswers}
         showCorrection={showCorrection}
         onToggleCorrection={setShowCorrection}
       />

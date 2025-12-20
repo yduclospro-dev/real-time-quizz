@@ -68,8 +68,9 @@ export function StudentQuestionView({
 
       {/* Answer cards */}
       <div className="grid grid-cols-2 gap-4">
-        {question.answers.map((answer) => {
-          const colorClass = ANSWER_COLORS[answer.color as keyof typeof ANSWER_COLORS];
+        {question.answers.map((answer, index) => {
+          const colors = Object.values(ANSWER_COLORS);
+          const colorClass = colors[index % colors.length];
           const selected = isSelected(answer.id);
 
           return (

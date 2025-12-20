@@ -84,8 +84,9 @@ export function TeacherQuestionView({
 
       {/* Answer cards with real-time stats */}
       <div className="grid grid-cols-2 gap-4">
-        {question.answers.map((answer) => {
-          const colorClass = ANSWER_COLORS[answer.color as keyof typeof ANSWER_COLORS];
+        {question.answers.map((answer, index) => {
+          const colors = Object.values(ANSWER_COLORS);
+          const colorClass = colors[index % colors.length];
           const count = getAnswerCount(answer.id);
           const students = getStudentsForAnswer(answer.id);
           const percentage = totalStudents > 0 ? Math.round((count / totalStudents) * 100) : 0;

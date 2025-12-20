@@ -41,6 +41,7 @@ export default function QuizEditorPage() {
     isModalOpen,
     setIsModalOpen,
     editingQuestionIndex,
+    setEditingQuestionIndex,
     handleAddQuestion,
     handleEditQuestionSettings,
     handleConfirmQuestionSettings,
@@ -203,7 +204,7 @@ export default function QuizEditorPage() {
                     const resp = await quizService.startSession(quizID);
                     console.log('Started session with response:', resp.sessionId);
                     toast.success('Session démarrée');
-                    router.push(`/quiz/${quizID}/session?sessionId=${resp.sessionId}`);
+                    router.push(`/quiz/${quizID}/session/${resp.sessionId}`);
                   } catch (e) {
                     console.error('Failed to start session', e);
                     toast.error('Impossible de démarrer la session');
@@ -269,7 +270,10 @@ export default function QuizEditorPage() {
 
         <QuestionSettingsModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingQuestionIndex(null);
+          }}
           onConfirm={handleConfirmQuestionSettings}
             initialType={editingQuestionIndex !== null ? questions[editingQuestionIndex].type : undefined}
           initialTimeLimit={editingQuestionIndex !== null ? questions[editingQuestionIndex].timeLimit : 30}

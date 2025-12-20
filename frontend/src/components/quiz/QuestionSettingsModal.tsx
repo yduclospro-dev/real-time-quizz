@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { QuestionType } from '@shared/enums/question-type';
 import { Button } from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
@@ -22,6 +22,14 @@ export default function QuestionSettingsModal({
 }: QuestionSettingsModalProps) {
   const [type, setType] = useState<QuestionType>(initialType);
   const [timeLimit, setTimeLimit] = useState(initialTimeLimit);
+
+  // Sync state with props when modal opens or props change
+  useEffect(() => {
+    if (isOpen) {
+      setType(initialType);
+      setTimeLimit(initialTimeLimit);
+    }
+  }, [isOpen, initialType, initialTimeLimit]);
 
   const handleConfirm = () => {
     onConfirm(type, timeLimit);
