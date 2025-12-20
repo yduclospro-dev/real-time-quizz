@@ -46,6 +46,7 @@ export class QuizController {
     return successResponse({ sessionId: session.id });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post()
   async createQuiz(
     @Body() request: CreateQuizRequest,

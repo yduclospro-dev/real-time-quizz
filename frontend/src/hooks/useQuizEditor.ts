@@ -43,7 +43,7 @@ function reducer(state: QuizQuestion[], action: Action): QuizQuestion[] {
 
 export function useQuizEditor(initial?: QuizQuestion[]) {
   const reactId = useId();
-  const idCounter = useRef(0);
+  const idCounter = useRef(1); // Start at 1 to avoid collision with initial question (-0)
 
   // create a question for initial render without mutating refs (stable)
   const createInitialQuestion = useCallback((): QuizQuestion => {

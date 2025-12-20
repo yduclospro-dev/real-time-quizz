@@ -13,6 +13,19 @@ export interface SessionDto {
   createdAt: string;
   currentSessionIndex?: number;
   currentQuestionEndsAt?: Date;
+  totalQuestions?: number;
+  questions?: Array<{
+    id: string;
+    text: string;
+    image: string | null;
+    type: string;
+    timeLimit: number;
+    answers: Array<{
+      id: string;
+      text: string;
+      isCorrect: boolean;
+    }>
+  }>;
   participants?: {
     id: string;
     displayName: string;

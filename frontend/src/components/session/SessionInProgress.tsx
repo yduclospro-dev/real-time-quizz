@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/Header";
 import { StudentQuestionView } from "./StudentQuestionView";
 import { TeacherQuestionView } from "./TeacherQuestionView";
 import { Scoreboard } from "./Scoreboard";
@@ -19,7 +18,6 @@ interface SessionInProgressProps {
   studentAnswers: StudentAnswer[];
   totalStudents: number;
   liveScores: Array<{ studentName: string; score: number; totalQuestions: number }>;
-  onQuit: () => void;
   onAnswerSelect: (answerId: string) => void;
 }
 
@@ -33,16 +31,10 @@ export function SessionInProgress({
   studentAnswers,
   totalStudents,
   liveScores,
-  onQuit,
   onAnswerSelect,
 }: SessionInProgressProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100">
-      <Header
-        title={`Question ${questionNumber}/${totalQuestions}`}
-        onQuit={onQuit}
-      />
-      <div className="grid grid-cols-[280px_1fr_280px] gap-4 px-12 py-8">
+    <div className="grid grid-cols-[280px_1fr_280px] gap-4 px-12 py-8">
         {/* Empty left spacer */}
         <div></div>
 
@@ -77,6 +69,5 @@ export function SessionInProgress({
           />
         </div>
       </div>
-    </div>
   );
 }

@@ -5,6 +5,7 @@ import { SessionLobby } from "@/components/session/SessionLobby";
 import { SessionInProgress } from "@/components/session/SessionInProgress";
 import { SessionBetweenQuestions } from "@/components/session/SessionBetweenQuestions";
 import { SessionFinished } from "@/components/session/SessionFinished";
+import { Header } from "@/components/layout/Header";
 import { useQuizSession } from "@/hooks/useQuizSession";
 import { SessionState } from '../../../../../../../shared/enums/session-state';
 
@@ -20,6 +21,7 @@ export default function SessionPage() {
     isTeacher,
     isBetweenQuestions,
     questions,
+    currentQuestion: currentQuestionFromHook,
     currentQuestionIndex,
     timeLeft,
     selectedAnswers,
@@ -27,6 +29,7 @@ export default function SessionPage() {
     studentResults,
     finalResults,
     userScore,
+    userAnswers,
     showQuitModal,
     pauseTimeLeft,
     liveScores,
@@ -40,11 +43,18 @@ export default function SessionPage() {
     handleConfirmQuit,
   } = useQuizSession();
 
+  // Use currentQuestion from hook for instant updates, fallback to array
+  const currentQuestion = currentQuestionFromHook || questions[currentQuestionIndex];
+
   // Render state-specific components
   let content: React.ReactNode = null;
+  let headerTitle = '';
+  let showHeader = false;
 
   // sessionState is a shared enum (CREATED/STARTED/FINISHED). We use a local flag for between-questions in the hook.
   if (sessionState === SessionState.CREATED) {
+    showHeader = true;
+    headerTitle = 'Session en attente';
     content = (
       <SessionLobby
         isTeacher={isTeacher}
@@ -55,7 +65,8 @@ export default function SessionPage() {
       />
     );
   } else if (sessionState === SessionState.STARTED && !isBetweenQuestions) {
-    const currentQuestion = questions[currentQuestionIndex];
+    showHeader = true;
+    headerTitle = `Question ${currentQuestionIndex + 1}/${questions.length}`;
     content = (
       <SessionInProgress
         isTeacher={isTeacher}
@@ -67,12 +78,12 @@ export default function SessionPage() {
         studentAnswers={studentAnswers}
         totalStudents={participants.length}
         liveScores={liveScores}
-        onQuit={handleQuitSession}
         onAnswerSelect={handleAnswerSelect}
       />
     );
   } else if (sessionState === SessionState.STARTED && isBetweenQuestions) {
-    const currentQuestion = questions[currentQuestionIndex];
+    showHeader = true;
+    headerTitle = 'Résultat';
     content = (
       <SessionBetweenQuestions
         isTeacher={isTeacher}
@@ -83,25 +94,27 @@ export default function SessionPage() {
         pauseTimeLeft={pauseTimeLeft}
         isLastQuestion={currentQuestionIndex === questions.length - 1}
         liveScores={liveScores}
-        onQuit={handleQuitSession}
       />
     );
   } else if (sessionState === SessionState.FINISHED) {
+    showHeader = true;
+    headerTitle = 'Quiz terminé';
     content = (
       <SessionFinished
         isTeacher={isTeacher}
         questions={questions}
         finalResults={finalResults}
         userScore={userScore}
+        userAnswers={userAnswers}
         showCorrection={showCorrection}
         onToggleCorrection={setShowCorrection}
-        onQuit={handleQuitSession}
       />
     );
   }
 
   return (
     <>
+      {showHeader && <Header title={headerTitle} onQuit={handleQuitSession} hideLogout={true} />}
       {content}
       <ConfirmQuitSessionModal
         isOpen={showQuitModal}
