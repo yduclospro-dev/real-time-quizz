@@ -395,6 +395,16 @@ export function useQuizSession() {
   };
 
   // ============================================
+  // LOAD RESULTS FROM DB (for rejoining finished sessions)
+  // ============================================
+  useEffect(() => {
+    // If session is already finished when we join (rejoining later), fetch results from DB
+    if (sessionState === SharedSessionState.FINISHED && finalResults.length === 0) {
+      loadResults();
+    }
+  }, [sessionState, finalResults.length]);
+
+  // ============================================
   // TIMER MANAGEMENT
   // ============================================
   // Timer is now fully managed by server WebSocket broadcasts
