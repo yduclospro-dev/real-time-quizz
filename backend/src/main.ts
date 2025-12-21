@@ -6,6 +6,8 @@ import { GlobalExceptionFilter } from './common/filters/global-exception.filter'
 import { ApiException } from './common/exceptions/api.exception';
 import { ValidationError, ValidationPipe } from '@nestjs/common';
 import { ErrorCode } from './common/errors/error-codes';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -41,8 +43,34 @@ async function bootstrap() {
     }),
   );
 
+  // OpenAPI/Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Real-Time Quiz API')
+    .setDescription('API for interactive real-time quiz platform with WebSocket support')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Authentication endpoints')
+    .addTag('users', 'User management')
+    .addTag('quizzes', 'Quiz CRUD operations')
+    .addTag('questions', 'Question management')
+    .addTag('sessions', 'Quiz session management')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  
+  // Serve with Scalar UI
+  app.use(
+    '/api/docs',
+    apiReference({
+      spec: {
+        content: document,
+      },
+    }),
+  );
+
   await app.listen(3000);
   console.log(`🚀 Backend running on: http://localhost:3000`);
+  console.log(`📚 API Documentation: http://localhost:3000/api/docs`);
 }
 
 export function flattenValidationErrors(

@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, UseGuards, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiResponse as ApiResponseDec, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { UserService } from '../user/user.service';
 import { RegisterRequest } from './requests/register.request';
@@ -11,6 +12,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { successResponse } from '../../common/http/api-response.util';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -19,6 +21,10 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user', description: 'Creates a new user account and returns JWT token in httpOnly cookie' })
+  @ApiBody({ type: RegisterRequest })
+  @ApiResponseDec({ status: 201, description: 'User successfully registered' })
+  @ApiResponseDec({ status: 400, description: 'Validation error or email already exists' })
   async register(
     @Body() request: RegisterRequest,
     @Res({ passthrough: true }) res: Response,
@@ -37,6 +43,10 @@ export class AuthController {
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Login user', description: 'Authenticates user and returns JWT token in httpOnly cookie' })
+  @ApiBody({ type: LoginRequest })
+  @ApiResponseDec({ status: 200, description: 'User successfully logged in' })
+  @ApiResponseDec({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() request: LoginRequest,
     @Res({ passthrough: true }) res: Response,
@@ -60,6 +70,10 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user', description: 'Returns the currently authenticated user information' })
+  @ApiResponseDec({ status: 200, description: 'Current user data' })
+  @ApiResponseDec({ status: 401, description: 'Not authenticated' })
   async me(
     @CurrentUser() jwtPayload: JwtPayload,
   ): Promise<ApiResponse<UserDto>> {
@@ -68,6 +82,8 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'Logout user', description: 'Clears the JWT token cookie' })
+  @ApiResponseDec({ status: 200, description: 'Successfully logged out' })
   logout(@Res({ passthrough: true }) res: Response): ApiResponse<null> {
     res.clearCookie('access_token');
     return successResponse(null);

@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse as ApiResponseDec, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { SessionService } from './session.service';
 import { ApiResponse } from '../../common/types/api-response';
 import { successResponse } from '../../common/http/api-response.util';
@@ -12,12 +13,18 @@ import { JoinSessionRequest } from './requests/join-session.request';
 import { SubmitAnswerRequest } from './requests/submit-answer.request';
 import { AdvanceSessionRequest } from './requests/advance-session.request';
 
+@ApiTags('sessions')
+@ApiBearerAuth()
 @Controller('session')
 export class SessionController {
   constructor(private readonly sessionService: SessionService) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Post('join')
+  @ApiOperation({ summary: 'Join quiz session', description: 'Join an active quiz session using a session code' })
+  @ApiBody({ type: JoinSessionRequest })
+  @ApiResponseDec({ status: 200, description: 'Successfully joined session' })
+  @ApiResponseDec({ status: 404, description: 'Session not found' })
   async join(
     @Body() body: JoinSessionRequest,
     @CurrentUser() user: JwtPayload,
