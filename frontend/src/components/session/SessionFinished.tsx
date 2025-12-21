@@ -260,10 +260,10 @@ export function SessionFinished({
 
           <Button
             variant="primary"
-            onClick={() => router.push(isTeacher ? "/quiz" : "/join")}
+            onClick={() => router.push("/")}
             className="w-full mt-8"
           >
-            {isTeacher ? "Retour à la liste des quiz" : "Quitter la session"}
+            Retour à l'accueil
           </Button>
         </div>
       </div>

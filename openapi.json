@@ -1,0 +1,938 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "description": "Creates a new user account and returns JWT token in httpOnly cookie",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User successfully registered"
+          },
+          "400": {
+            "description": "Validation error or email already exists"
+          }
+        },
+        "summary": "Register a new user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Authenticates user and returns JWT token in httpOnly cookie",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User successfully logged in"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        },
+        "summary": "Login user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "description": "Returns the currently authenticated user information",
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user data"
+          },
+          "401": {
+            "description": "Not authenticated"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "Clears the JWT token cookie",
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successfully logged out"
+          }
+        },
+        "summary": "Logout user",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/quiz/{id}/start": {
+      "post": {
+        "description": "Creates a new quiz session in lobby state (Teacher only). The session is not started until the teacher clicks \"Démarrer le quiz\" button.",
+        "operationId": "QuizController_startSession",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Session created successfully"
+          },
+          "403": {
+            "description": "Only teachers can start sessions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create quiz session",
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
+    "/quiz": {
+      "post": {
+        "description": "Creates a new quiz with questions (Teacher only)",
+        "operationId": "QuizController_createQuiz",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuizRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Quiz created successfully"
+          },
+          "403": {
+            "description": "Only teachers can create quizzes"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create quiz",
+        "tags": [
+          "quizzes"
+        ]
+      },
+      "get": {
+        "description": "Retrieves all quizzes for the authenticated user",
+        "operationId": "QuizController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Quizzes retrieved successfully"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get all quizzes",
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
+    "/quiz/{id}": {
+      "get": {
+        "description": "Retrieves a quiz with all questions and answers",
+        "operationId": "QuizController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz found"
+          },
+          "404": {
+            "description": "Quiz not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get quiz by ID",
+        "tags": [
+          "quizzes"
+        ]
+      },
+      "put": {
+        "description": "Updates an existing quiz (Teacher only)",
+        "operationId": "QuizController_updateQuiz",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateQuizRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quiz updated successfully"
+          },
+          "403": {
+            "description": "Only teachers can update quizzes"
+          },
+          "404": {
+            "description": "Quiz not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update quiz",
+        "tags": [
+          "quizzes"
+        ]
+      },
+      "delete": {
+        "description": "Deletes a quiz (Teacher only)",
+        "operationId": "QuizController_deleteQuiz",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Quiz ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz deleted successfully"
+          },
+          "403": {
+            "description": "Only teachers can delete quizzes"
+          },
+          "404": {
+            "description": "Quiz not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete quiz",
+        "tags": [
+          "quizzes"
+        ]
+      }
+    },
+    "/session/join": {
+      "post": {
+        "description": "Join an active quiz session using a session code",
+        "operationId": "SessionController_join",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully joined session"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Join quiz session",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/history": {
+      "get": {
+        "description": "Get all sessions the user participated in (as teacher or student)",
+        "operationId": "SessionController_getUserHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Session history retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get user session history",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}": {
+      "get": {
+        "description": "Get session details by ID",
+        "operationId": "SessionController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session found"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get session",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/submit": {
+      "post": {
+        "description": "Submit an answer for the current question",
+        "operationId": "SessionController_submit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer submitted successfully"
+          },
+          "404": {
+            "description": "Session or participant not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Submit answer",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/advance": {
+      "post": {
+        "description": "Move to the next question in the quiz (Teacher only)",
+        "operationId": "SessionController_advance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvanceSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Advanced to next question"
+          },
+          "403": {
+            "description": "Only teachers can advance questions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance to next question",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/state": {
+      "get": {
+        "description": "Get current state of the session",
+        "operationId": "SessionController_state",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session state retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get session state",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/start": {
+      "post": {
+        "description": "Start the quiz from lobby state (Teacher only). This advances to the first question.",
+        "operationId": "SessionController_start",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz started successfully"
+          },
+          "403": {
+            "description": "Only teachers can start the quiz"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start quiz",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/quiz": {
+      "get": {
+        "description": "Get the quiz associated with this session",
+        "operationId": "SessionController_quiz",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quiz retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get session quiz",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/results": {
+      "get": {
+        "description": "Get final results for the session",
+        "operationId": "SessionController_results",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Results retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get session results",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/finish": {
+      "post": {
+        "description": "Mark the session as finished (Teacher only)",
+        "operationId": "SessionController_finish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session finished successfully"
+          },
+          "403": {
+            "description": "Only teachers can finish sessions"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finish session",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/question-stats": {
+      "get": {
+        "description": "Get statistics for the current question (how many students answered)",
+        "operationId": "SessionController_questionStats",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get question statistics",
+        "tags": [
+          "sessions"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Real-Time Quiz API",
+    "description": "API for interactive real-time quiz platform with WebSocket support",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "users",
+      "description": "User management"
+    },
+    {
+      "name": "quizzes",
+      "description": "Quiz CRUD operations"
+    },
+    {
+      "name": "questions",
+      "description": "Question management"
+    },
+    {
+      "name": "sessions",
+      "description": "Quiz session management"
+    }
+  ],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "lastName": {
+            "type": "string",
+            "example": "Dupont",
+            "description": "User last name"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Jean",
+            "description": "User first name"
+          },
+          "email": {
+            "type": "string",
+            "example": "jean.dupont@example.com",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "description": "User password (min 6 characters)",
+            "minLength": 6
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "TEACHER",
+              "STUDENT"
+            ],
+            "example": "STUDENT",
+            "description": "User role (TEACHER or STUDENT)"
+          }
+        },
+        "required": [
+          "lastName",
+          "firstName",
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "jean.dupont@example.com",
+            "description": "User email address"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "description": "User password",
+            "minLength": 6
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CreateAnswerRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Answer text",
+            "example": "Paris"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "description": "Whether this answer is correct",
+            "example": true
+          }
+        },
+        "required": [
+          "text",
+          "isCorrect"
+        ]
+      },
+      "CreateQuestionRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Question text",
+            "example": "What is the capital of France?"
+          },
+          "type": {
+            "type": "string",
+            "description": "Question type",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE"
+            ],
+            "example": "SINGLE_CHOICE"
+          },
+          "image": {
+            "type": "string",
+            "description": "Optional image URL for the question",
+            "example": "https://example.com/image.jpg"
+          },
+          "answers": {
+            "description": "List of possible answers (minimum 2)",
+            "example": [
+              {
+                "text": "Paris",
+                "isCorrect": true
+              },
+              {
+                "text": "London",
+                "isCorrect": false
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateAnswerRequest"
+            }
+          },
+          "timeLimit": {
+            "type": "number",
+            "description": "Time limit for this question in seconds (5-3600)",
+            "example": 30,
+            "minimum": 5,
+            "maximum": 3600
+          }
+        },
+        "required": [
+          "text",
+          "type",
+          "answers"
+        ]
+      },
+      "CreateQuizRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Quiz title",
+            "example": "Geography Quiz"
+          },
+          "questions": {
+            "description": "List of questions (minimum 1)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateQuestionRequest"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "questions"
+        ]
+      },
+      "JoinSessionRequest": {
+        "type": "object",
+        "properties": {
+          "sessionCode": {
+            "type": "string",
+            "description": "Session code to join (6 characters)",
+            "example": "ABC123",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        },
+        "required": [
+          "sessionCode"
+        ]
+      },
+      "SubmitAnswerRequest": {
+        "type": "object",
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "description": "Question ID to submit answer for",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "selectedAnswerIds": {
+            "description": "Array of selected answer IDs",
+            "example": [
+              "550e8400-e29b-41d4-a716-446655440001"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "questionId",
+          "selectedAnswerIds"
+        ]
+      },
+      "AdvanceSessionRequest": {
+        "type": "object",
+        "properties": {
+          "nextQuestionIndex": {
+            "type": "number",
+            "description": "Index of the next question to advance to",
+            "example": 1,
+            "minimum": 0
+          },
+          "timeLimitSeconds": {
+            "type": "number",
+            "description": "Time limit for the next question in seconds",
+            "example": 30,
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}
