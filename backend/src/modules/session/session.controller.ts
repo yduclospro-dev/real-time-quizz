@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse as ApiResponseDec, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { SessionService } from './session.service';
 import { ApiResponse } from '../../common/types/api-response';
@@ -21,6 +21,7 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('join')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Join quiz session', description: 'Join an active quiz session using a session code' })
   @ApiBody({ type: JoinSessionRequest })
   @ApiResponseDec({ status: 200, description: 'Successfully joined session' })
@@ -63,6 +64,7 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/submit')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Submit answer', description: 'Submit an answer for the current question' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   @ApiBody({ type: SubmitAnswerRequest })
@@ -84,6 +86,7 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/advance')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Advance to next question', description: 'Move to the next question in the quiz (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   @ApiBody({ type: AdvanceSessionRequest })
@@ -115,6 +118,7 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/start')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Start quiz', description: 'Start the quiz from lobby state (Teacher only). This advances to the first question.' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   @ApiResponseDec({ status: 200, description: 'Quiz started successfully' })
@@ -149,6 +153,7 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/finish')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Finish session', description: 'Mark the session as finished (Teacher only)' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   @ApiResponseDec({ status: 200, description: 'Session finished successfully' })

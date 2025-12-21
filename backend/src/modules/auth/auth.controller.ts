@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards, Res } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Res, HttpCode, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiResponse as ApiResponseDec, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
@@ -43,6 +43,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user', description: 'Authenticates user and returns JWT token in httpOnly cookie' })
   @ApiBody({ type: LoginRequest })
   @ApiResponseDec({ status: 200, description: 'User successfully logged in' })
@@ -82,6 +83,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout user', description: 'Clears the JWT token cookie' })
   @ApiResponseDec({ status: 200, description: 'Successfully logged out' })
   logout(@Res({ passthrough: true }) res: Response): ApiResponse<null> {

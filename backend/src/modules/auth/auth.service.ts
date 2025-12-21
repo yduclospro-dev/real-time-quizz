@@ -19,7 +19,7 @@ export class AuthService {
     if (existingUser) {
       throw new ApiException(
         409,
-        ErrorCode.UNIQUE_CONSTRAINT,
+        ErrorCode.USER_ALREADY_EXISTS,
         'Cet email est déjà utilisé',
       );
     }
