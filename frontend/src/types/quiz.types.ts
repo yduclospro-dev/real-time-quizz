@@ -38,10 +38,22 @@ export interface QuizListItem {
 
 export interface CreateQuizDto {
   title: string;
-  questions: Omit<QuizQuestion, "id">[];
+  questions: Array<{
+    question: string;
+    image?: string;
+    type: QuestionType;
+    answers: Omit<QuizAnswer, 'color'>[];
+    timeLimit: number;
+  }>;
 }
 
 export interface UpdateQuizDto {
   title?: string;
-  questions?: Omit<QuizQuestion, "id">[];
+  questions?: Array<{
+    question: string;
+    image?: string;
+    type: QuestionType;
+    answers: Omit<QuizAnswer, 'color'>[];
+    timeLimit: number;
+  }>;
 }

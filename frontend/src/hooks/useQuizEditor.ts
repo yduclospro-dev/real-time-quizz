@@ -1,4 +1,5 @@
 import { useCallback, useReducer, useState, useId, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { QuizQuestion } from "@/types/quiz.types";
 import { QuestionType } from "@shared/enums/question-type";
 
@@ -132,7 +133,12 @@ export function useQuizEditor(initial?: QuizQuestion[]) {
   }, [questionToDelete, questions.length]);
 
   const handleExit = useCallback(() => setIsExitModalOpen(true), []);
-  const confirmExit = useCallback(() => setIsExitModalOpen(false), []);
+  
+  const router = useRouter();
+  const confirmExit = useCallback(() => {
+    setIsExitModalOpen(false);
+    router.push('/quiz');
+  }, [router]);
 
   const handleUpdateQuestion = useCallback((index: number, updatedQuestion: QuizQuestion) => {
     dispatch({ type: "UPDATE_QUESTION", index, payload: updatedQuestion });

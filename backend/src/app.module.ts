@@ -8,6 +8,7 @@ import { QuestionModule } from './modules/question/question.module';
 import { SessionModule } from './modules/session/session.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
     QuestionModule,
     SessionModule,
     WebsocketModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

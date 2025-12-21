@@ -82,6 +82,7 @@ export class QuizService {
           create: request.questions.map((q) => ({
             text: q.text,
             type: q.type,
+            image: q.image,
             timeLimit: q.timeLimit ?? 30,
             answers: {
               create: q.answers,
@@ -175,8 +176,7 @@ export class QuizService {
             deleteMany: {}, // on remplace l’arbre complet
             create: request.questions.map((q) => ({
               text: q.text,
-              type: q.type,
-              timeLimit: q.timeLimit ?? 30,
+              type: q.type,              image: q.image,              timeLimit: q.timeLimit ?? 30,
               answers: {
                 create: q.answers.map((a) => ({
                   text: a.text,
