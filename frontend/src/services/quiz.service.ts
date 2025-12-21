@@ -21,8 +21,6 @@ export const quizService = {
       'orange',
     ];
 
-    console.log("Mapping server quiz to UI:", server);
-
     return {
       ...server,
       questions: (server.questions || []).map((q: ServerQuestionDto) => ({
@@ -49,7 +47,6 @@ export const quizService = {
 
   async getQuizById(id: string): Promise<Quiz> {
     const response = await apiClient.get<ApiResponse<ServerQuizDto | { quiz: ServerQuizDto }>>(`/quiz/${id}`);
-    console.log("API response for getQuizById:", response.data);
     const payload = response.data.data;
     if (!payload) throw new Error('Quiz not found');
     const server: ServerQuizDto = ((payload as { quiz?: ServerQuizDto }).quiz ?? (payload as ServerQuizDto)) as ServerQuizDto;
@@ -61,7 +58,7 @@ export const quizService = {
       title: data.title,
       questions: data.questions.map((q) => ({
         text: q.question,
-        image: q.imageUrl,
+        image: q.image,
         type: q.type,
         timeLimit: q.timeLimit,
         answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
@@ -80,7 +77,7 @@ export const quizService = {
       ...(data.questions && {
         questions: data.questions.map((q) => ({
           text: q.question,
-          image: q.imageUrl,
+          image: q.image,
           type: q.type,
           timeLimit: q.timeLimit,
           answers: q.answers.map((a) => ({ text: a.text, isCorrect: a.isCorrect })),
@@ -89,9 +86,7 @@ export const quizService = {
     };
 
     const response = await apiClient.put<ApiResponse<{ quiz: ServerQuizDto }>>(`/quiz/${id}`, payload);
-    console.log("API response for updateQuiz:", response.data);
     const respPayload = response.data.data as ServerQuizDto | null;
-    console.log("Response payload for updateQuiz:", respPayload);
     if (!respPayload) throw new Error('Failed to update quiz');
     return quizService.mapServerQuizToUI(respPayload);
   },

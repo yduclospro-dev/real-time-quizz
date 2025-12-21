@@ -73,7 +73,6 @@ export default function QuizEditorPage() {
 
   useEffect(() => {
     if (!initRef.current && quizData) {
-      console.log('Loaded quiz data (effect):', quizData);
       startTransition(() => {
         setTitle(quizData.title ?? '');
         setQuestions(quizData.questions ?? []);
@@ -135,12 +134,11 @@ export default function QuizEditorPage() {
 
   const handleSaveQuiz = async () => {
     try {
-      console.log('Saving quiz with title:', title, 'and questions:', questions);
       const quizData: UpdateQuizDto = {
         title,
         questions: questions.map(q => ({
           question: q.question,
-          imageUrl: (q as unknown as { imageUrl?: string }).imageUrl,
+          image: (q as unknown as { imageUrl?: string }).imageUrl,
           type: q.type,
           answers: q.answers,
           timeLimit: q.timeLimit,
@@ -152,7 +150,6 @@ export default function QuizEditorPage() {
         return;
       }
 
-      console.log('Quiz data to be sent for update:', quizData, 'for quiz ID:', quizID);
       await updateMutation.mutateAsync({ id: quizID, data: quizData });
     } catch (error) {
       toast.error("Erreur lors de la mise à jour du quiz");

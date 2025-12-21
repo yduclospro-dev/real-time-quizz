@@ -64,7 +64,7 @@ export default function QuizCreatePage() {
         title,
         questions: questions.map((q) => ({
           question: q.question,
-          imageUrl: (q as unknown as { imageUrl?: string }).imageUrl,
+          image: (q as unknown as { imageUrl?: string }).imageUrl,
           type: q.type,
           answers: q.answers,
           timeLimit: q.timeLimit,

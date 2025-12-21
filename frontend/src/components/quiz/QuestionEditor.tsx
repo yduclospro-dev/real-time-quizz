@@ -1,8 +1,8 @@
 "use client";
 
-import { Trash2, Image, Clock } from "lucide-react";
+import { Trash2, Image, Clock, X } from "lucide-react";
 import { QuizQuestion, QuizAnswer } from "@/types/quiz.types";
-import { useId, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import AnswerCard from "./AnswerCard";
 import { QuestionType } from '@shared/enums/question-type';
 import { useFieldError } from '@/hooks/useFieldError';
@@ -22,6 +22,8 @@ export default function QuestionEditor({
   onDelete,
   canDelete,
 }: QuestionEditorProps) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const qIndex = questionNumber - 1;
   const questionError = useFieldError(`questions.${qIndex}.text`);
   const answersError = useFieldError(`questions.${qIndex}.answers`);
@@ -121,24 +123,84 @@ export default function QuestionEditor({
           accept="image/*"
           id={`image-upload-${question.id}`}
           className="hidden"
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) {
-              // TODO: Handle image upload (Cloudinary integration)
-              console.log('Image selected:', file.name);
+            if (!file) return;
+
+            setIsUploading(true);
+            setUploadError(null);
+
+            try {
+              const formData = new FormData();
+              formData.append('image', file);
+
+              const response = await fetch('http://localhost:3000/upload/image', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData,
+              });
+
+              const data = await response.json();
+
+              if (!response.ok || !data.success) {
+                throw new Error(data.error?.message || 'Échec du téléchargement');
+              }
+
+              onUpdate({ ...question, imageUrl: data.data.imageUrl });
+            } catch (error) {
+              console.error('Upload error:', error);
+              setUploadError(error instanceof Error ? error.message : 'Erreur lors du téléchargement');
+            } finally {
+              setIsUploading(false);
+              e.target.value = '';
             }
           }}
+          disabled={isUploading}
         />
-        <label
-          htmlFor={`image-upload-${question.id}`}
-          className="flex items-center justify-center h-72 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors"
-        >
-          <div className="flex flex-col items-center justify-center text-center">
-            <Image className="w-12 h-12 mb-3 text-gray-400" aria-hidden="true" />
-            <p className="text-sm text-gray-500 mb-2">Rechercher et insérer une image</p>
-            <p className="text-xs text-gray-400">Télécharger un fichier ou glisser-déposer ici</p>
+        
+        {question.imageUrl ? (
+          <div className="relative">
+            <img
+              src={question.imageUrl}
+              alt="Question illustration"
+              className="w-full h-72 object-cover rounded-lg border-2 border-gray-300"
+            />
+            <button
+              type="button"
+              onClick={() => onUpdate({ ...question, imageUrl: undefined })}
+              className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              title="Supprimer l'image"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        </label>
+        ) : (
+          <label
+            htmlFor={`image-upload-${question.id}`}
+            className={`flex items-center justify-center h-72 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors ${
+              isUploading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            <div className="flex flex-col items-center justify-center text-center">
+              {isUploading ? (
+                <>
+                  <div className="w-12 h-12 mb-3 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                  <p className="text-sm text-gray-500">Téléchargement en cours...</p>
+                </>
+              ) : (
+                <>
+                  <Image className="w-12 h-12 mb-3 text-gray-400" aria-hidden="true" />
+                  <p className="text-sm text-gray-500 mb-2">Rechercher et insérer une image</p>
+                  <p className="text-xs text-gray-400">Télécharger un fichier ou glisser-déposer ici</p>
+                </>
+              )}
+            </div>
+          </label>
+        )}
+        
+        {uploadError && (
+          <p className="mt-2 text-sm text-red-500">{uploadError}</p>
+        )}
       </div>
 
       {/* Answer Grid */}
