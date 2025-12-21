@@ -26,6 +26,9 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   
   // Map to track active timers for each session
   private sessionTimers = new Map<string, NodeJS.Timeout>(); // sessionId -> timer
+  
+  // Map to track pause timers between questions
+  private pauseTimers = new Map<string, { endTime: number; timeout: NodeJS.Timeout }>(); // sessionId -> pause info
 
   constructor(private readonly sessionService: SessionService) {}
 
@@ -59,6 +62,14 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
           console.log(`Cleared timer for session ${sessionId}`);
         }
         
+        // Clear pause timer if any
+        const pauseInfo = this.pauseTimers.get(sessionId);
+        if (pauseInfo) {
+          clearTimeout(pauseInfo.timeout);
+          this.pauseTimers.delete(sessionId);
+          console.log(`Cleared pause timer for session ${sessionId}`);
+        }
+        
         // DO NOT auto-finish - teacher might rejoin to continue or restart
         // Session will be finished when teacher completes quiz flow normally
       }
@@ -81,6 +92,60 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
 
     // Send current state to the joining client
     client.emit('session:state', sessionState);
+
+    // If session is started, send current question stats (answer counts)
+    if (sessionState.state === 'STARTED') {
+      const stats = await this.sessionService.getCurrentQuestionStats(sessionId);
+      client.emit('question:stats', stats);
+      
+      // Check if we're in a pause between questions
+      const pauseInfo = this.pauseTimers.get(sessionId);
+      if (pauseInfo) {
+        // We're between questions - send pause time left
+        const now = Date.now();
+        const pauseTimeLeft = Math.max(0, Math.ceil((pauseInfo.endTime - now) / 1000));
+        client.emit('pause:state', {
+          pauseTimeLeft,
+          isBetweenQuestions: true,
+        });
+        
+        // Send full scores (includes current question since it's over)
+        const scores = await this.getLiveScores(sessionId, false);
+        client.emit('scores:update', {
+          scores,
+          totalQuestions: sessionState.totalQuestions,
+        });
+      } else {
+        // Active question - send scores excluding current question
+        const scores = await this.getLiveScores(sessionId, true);
+        client.emit('scores:update', {
+          scores,
+          totalQuestions: sessionState.totalQuestions,
+        });
+        
+        // Check if user has already submitted answer for current question
+        const session = await this.sessionService.getSessionWithSubmissions(sessionId);
+        if (session && session.currentQuestionIndex !== null) {
+          const currentQuestion = session.quiz.questions[session.currentQuestionIndex];
+          const participant = session.participants.find(p => p.userId === userId);
+          
+          if (participant && currentQuestion) {
+            // Find user's latest submission for current question
+            const submission = participant.answerSubmissions
+              .filter(s => s.questionId === currentQuestion.id)
+              .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime())[0];
+            
+            if (submission) {
+              // User had already answered - restore their selection
+              client.emit('answer:restore', {
+                questionId: currentQuestion.id,
+                selectedAnswerIds: submission.selectedAnswerIds,
+              });
+            }
+          }
+        }
+      }
+    }
 
     // Notify others in the room
     this.server.to(sessionId).emit('participant:joined', {
@@ -271,6 +336,69 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
             
             // STOP the timer to prevent infinite loop
             this.stopTimerBroadcast(sessionId);
+            
+            // Broadcast that we're entering pause state
+            this.server.to(sessionId).emit('pause:start', { pauseDuration: 10 });
+            
+            // Track pause state for rejoining users
+            const pauseEndTime = Date.now() + 10000;
+            const pauseTimeout = setTimeout(async () => {
+              try {
+                const currentSession = await this.sessionService.getSessionWithSubmissions(sessionId);
+                if (!currentSession || currentSession.state !== 'STARTED') return;
+                
+                const currentIdx = currentSession.currentQuestionIndex;
+                const totalQs = currentSession.quiz.questions.length;
+                
+                if (currentIdx < totalQs - 1) {
+                  // Advance to next question
+                  const nextIndex = currentIdx + 1;
+                  const nextQuestion = currentSession.quiz.questions[nextIndex];
+                  
+                  const result = await this.sessionService.advanceQuestion(
+                    sessionId,
+                    currentSession.quiz.authorId, // Use quiz author as the one advancing
+                    nextIndex,
+                    nextQuestion.timeLimit || 30,
+                  );
+                  
+                  this.server.to(sessionId).emit('question:advanced', {
+                    currentQuestionIndex: result.currentQuestionIndex,
+                    currentQuestionEndsAt: result.currentQuestionEndsAt,
+                    question: {
+                      id: nextQuestion.id,
+                      text: nextQuestion.text,
+                      image: nextQuestion.image,
+                      type: nextQuestion.type,
+                      timeLimit: nextQuestion.timeLimit,
+                      answers: nextQuestion.answers.map(a => ({
+                        id: a.id,
+                        text: a.text,
+                        isCorrect: a.isCorrect,
+                      })),
+                    },
+                  });
+                  
+                  this.startTimerBroadcast(sessionId);
+                  console.log(`Session ${sessionId} auto-advanced to question ${nextIndex}`);
+                } else {
+                  // Last question - finish session
+                  const finishedSession = await this.sessionService.finishSession(
+                    sessionId,
+                    currentSession.quiz.authorId,
+                  );
+                  
+                  this.stopTimerBroadcast(sessionId);
+                  this.server.to(sessionId).emit('session:finished', finishedSession);
+                  console.log(`Session ${sessionId} auto-finished`);
+                }
+              } catch (error) {
+                console.error(`Error auto-advancing session ${sessionId}:`, error);
+              }
+            }, 10000); // 10 second pause
+            
+            // Store pause info so rejoining users can see it
+            this.pauseTimers.set(sessionId, { endTime: pauseEndTime, timeout: pauseTimeout });
           }
         } else {
           // Session not in active state, stop timer
@@ -300,10 +428,15 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
   }
   
   // Calculate live scores during active session
-  private async getLiveScores(sessionId: string) {
+  private async getLiveScores(sessionId: string, excludeCurrentQuestion = false) {
     const session = await this.sessionService.getSessionWithSubmissions(sessionId);
     
     if (!session) return [];
+    
+    // Get current question ID to exclude if needed
+    const currentQuestionId = excludeCurrentQuestion && session.currentQuestionIndex !== null
+      ? session.quiz.questions[session.currentQuestionIndex]?.id
+      : null;
     
     // Return scores for ALL participants, even if they have no submissions
     const scores = session.participants.map(participant => {
@@ -312,6 +445,9 @@ export class SessionGateway implements OnGatewayConnection, OnGatewayDisconnect 
       // Group submissions by questionId and get LATEST for each question
       const questionMap = new Map<string, any>();
       participant.answerSubmissions.forEach(submission => {
+        // Skip current question if excluding
+        if (currentQuestionId && submission.questionId === currentQuestionId) return;
+        
         const existing = questionMap.get(submission.questionId);
         if (!existing || submission.submittedAt > existing.submittedAt) {
           questionMap.set(submission.questionId, submission);
