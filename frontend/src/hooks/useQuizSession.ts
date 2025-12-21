@@ -137,14 +137,40 @@ export function useQuizSession() {
         }));
         setQuestions(mappedQuestions);
         
-        // Set current question if session started
-        if (state.currentSessionIndex !== undefined && mappedQuestions[state.currentSessionIndex]) {
-          setCurrentQuestion(mappedQuestions[state.currentSessionIndex]);
+        // ALWAYS set current question when session is STARTED and we have a valid index
+        if (state.state === 'STARTED' && state.currentSessionIndex !== undefined && mappedQuestions[state.currentSessionIndex]) {
+          const currentQ = mappedQuestions[state.currentSessionIndex];
+          setCurrentQuestion(currentQ);
+          setCurrentQuestionIndex(state.currentSessionIndex);
+          
+          // Calculate and set timer
+          if (state.currentQuestionEndsAt) {
+            const endsAt = new Date(state.currentQuestionEndsAt).getTime();
+            const now = Date.now();
+            const remaining = Math.max(0, Math.floor((endsAt - now) / 1000));
+            setTimeLeft(remaining);
+          } else if (currentQ.timeLimit) {
+            setTimeLeft(currentQ.timeLimit);
+          }
         }
       }
       
       updateSessionState(state);
     });
+    
+    // Handle pause state when rejoining during between-questions period
+    const handlePauseState = (data: any) => {
+      if (data.isBetweenQuestions) {
+        setIsBetweenQuestions(true);
+        setPauseTimeLeft(data.pauseTimeLeft || 10);
+      }
+    };
+    
+    // Handle pause:start event when timer expires
+    const handlePauseStart = (data: any) => {
+      setIsBetweenQuestions(true);
+      setPauseTimeLeft(data.pauseDuration || 10);
+    };
 
     // Session started event
     const handleSessionStarted = (session: any) => {
@@ -257,6 +283,13 @@ export function useQuizSession() {
     const handleAnswerConfirmed = (data: any) => {
       // Don't update score here - would reveal if answer is correct!
     };
+    
+    // Restore answer when rejoining (user had already selected answers)
+    const handleAnswerRestore = (data: any) => {
+      if (data.questionId && data.selectedAnswerIds) {
+        setSelectedAnswers(data.selectedAnswerIds);
+      }
+    };
 
     // Question stats (for teacher real-time view)
     const handleQuestionStats = (stats: any) => {
@@ -295,12 +328,16 @@ export function useQuizSession() {
     };
 
     // Register all event listeners
+    socket.on('session:state', updateSessionState);
+    socket.on('pause:state', handlePauseState);
+    socket.on('pause:start', handlePauseStart);
     socket.on('session:started', handleSessionStarted);
     socket.on('question:advanced', handleQuestionAdvanced);
     socket.on('timer:update', handleTimerUpdate);
     socket.on('timer:expired', handleTimerExpired);
     socket.on('scores:update', handleScoresUpdate);
     socket.on('answer:confirmed', handleAnswerConfirmed);
+    socket.on('answer:restore', handleAnswerRestore);
     socket.on('question:stats', handleQuestionStats);
     socket.on('session:finished', handleSessionFinished);
     socket.on('participant:joined', handleParticipantJoined);
@@ -309,11 +346,15 @@ export function useQuizSession() {
 
     // Cleanup on unmount - remove ALL listeners
     return () => {
+      socket.off('session:state', updateSessionState);
+      socket.off('pause:state', handlePauseState);
+      socket.off('pause:start', handlePauseStart);
       socket.off('session:started', handleSessionStarted);
       socket.off('question:advanced', handleQuestionAdvanced);
       socket.off('timer:update', handleTimerUpdate);
       socket.off('timer:expired', handleTimerExpired);
       socket.off('scores:update', handleScoresUpdate);
+      socket.off('answer:restore', handleAnswerRestore);
       socket.off('answer:confirmed', handleAnswerConfirmed);
       socket.off('question:stats', handleQuestionStats);
       socket.off('session:finished', handleSessionFinished);
@@ -414,37 +455,14 @@ export function useQuizSession() {
     if (isBetweenQuestions && pauseTimeLeft > 0) {
       const timer = setTimeout(() => setPauseTimeLeft(pauseTimeLeft - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (isBetweenQuestions && pauseTimeLeft === 0 && isTeacher) {
-      // Teacher auto-advances to next question after pause
+    } else if (isBetweenQuestions && pauseTimeLeft === 0) {
+      // Server handles auto-advance after 10 seconds, just clear local state
       setIsBetweenQuestions(false);
       setSelectedAnswers([]);
       setStudentAnswers([]);
       setStudentResults([]);
-      
-      if (socketRef.current && user) {
-        if (currentQuestionIndex < questions.length - 1) {
-          const nextIndex = currentQuestionIndex + 1;
-          const nextQuestion = questions[nextIndex];
-          
-          socketRef.current.emit('question:advance', {
-            sessionId,
-            userId: user.id,
-            nextQuestionIndex: nextIndex,
-            timeLimitSeconds: nextQuestion.timeLimit || 30,
-          });
-        } else {
-          // Last question finished - end session
-          socketRef.current.emit('session:finish', {
-            sessionId,
-            userId: user.id,
-          });
-        }
-      }
-    } else if (isBetweenQuestions && pauseTimeLeft === 0 && !isTeacher) {
-      // Students just wait for teacher
-      setIsBetweenQuestions(false);
     }
-  }, [isBetweenQuestions, pauseTimeLeft, isTeacher, currentQuestionIndex, questions, user, sessionId]);
+  }, [isBetweenQuestions, pauseTimeLeft]);
 
   // ============================================
   // EVENT HANDLERS: Quiz Flow
