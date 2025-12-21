@@ -33,14 +33,14 @@ export class QuizController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/start')
-  @ApiOperation({ summary: 'Start quiz session', description: 'Creates and starts a new quiz session (Teacher only)' })
+  @ApiOperation({ summary: 'Create quiz session', description: 'Creates a new quiz session in lobby state (Teacher only). The session is not started until the teacher clicks "Démarrer le quiz" button.' })
   @ApiParam({ name: 'id', description: 'Quiz ID' })
   @ApiResponseDec({ status: 201, description: 'Session created successfully' })
   @ApiResponseDec({ status: 403, description: 'Only teachers can start sessions' })
   async startSession(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<ApiResponse<{ sessionId: string }>> {
+  ): Promise<ApiResponse<{ sessionId: string; code: string }>> {
     if (user.role !== Role.TEACHER) {
       throw new ApiException(
         403,
@@ -50,7 +50,7 @@ export class QuizController {
     }
 
     const session = await this.sessionService.createSessionForQuiz(id);
-    return successResponse({ sessionId: session.id });
+    return successResponse({ sessionId: session.id, code: session.code });
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -88,6 +88,8 @@ export class QuizController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
+  @ApiOperation({ summary: 'Get all quizzes', description: 'Retrieves all quizzes for the authenticated user' })
+  @ApiResponseDec({ status: 200, description: 'Quizzes retrieved successfully' })
   async findAll(): Promise<ApiResponse<{ quizzes: QuizDto[] }>> {
     const quizzes = await this.quizService.findAll();
     return successResponse({ quizzes });
@@ -95,6 +97,12 @@ export class QuizController {
 
   @UseGuards(AuthGuard('jwt'))
   @Put(':id')
+  @ApiOperation({ summary: 'Update quiz', description: 'Updates an existing quiz (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Quiz ID' })
+  @ApiBody({ type: CreateQuizRequest })
+  @ApiResponseDec({ status: 200, description: 'Quiz updated successfully' })
+  @ApiResponseDec({ status: 403, description: 'Only teachers can update quizzes' })
+  @ApiResponseDec({ status: 404, description: 'Quiz not found' })
   async updateQuiz(
     @Param('id') id: string,
     @Body() request: CreateQuizRequest,
@@ -115,6 +123,11 @@ export class QuizController {
 
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete quiz', description: 'Deletes a quiz (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Quiz ID' })
+  @ApiResponseDec({ status: 200, description: 'Quiz deleted successfully' })
+  @ApiResponseDec({ status: 403, description: 'Only teachers can delete quizzes' })
+  @ApiResponseDec({ status: 404, description: 'Quiz not found' })
   async deleteQuiz(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,

@@ -38,7 +38,22 @@ export class SessionController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Get('history')
+  @ApiOperation({ summary: 'Get user session history', description: 'Get all sessions the user participated in (as teacher or student)' })
+  @ApiResponseDec({ status: 200, description: 'Session history retrieved' })
+  async getUserHistory(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<ApiResponse<any[]>> {
+    const sessions = await this.sessionService.getUserSessionHistory(user.sub);
+    return successResponse(sessions);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Get(':id')
+  @ApiOperation({ summary: 'Get session', description: 'Get session details by ID' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Session found' })
+  @ApiResponseDec({ status: 404, description: 'Session not found' })
   async get(@Param('id') id: string): Promise<ApiResponse<SessionDto>> {
     const session = await this.sessionService.findByIdOrFail(id);
     if (!session)
@@ -48,6 +63,11 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/submit')
+  @ApiOperation({ summary: 'Submit answer', description: 'Submit an answer for the current question' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiBody({ type: SubmitAnswerRequest })
+  @ApiResponseDec({ status: 200, description: 'Answer submitted successfully' })
+  @ApiResponseDec({ status: 404, description: 'Session or participant not found' })
   async submit(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
@@ -64,6 +84,11 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/advance')
+  @ApiOperation({ summary: 'Advance to next question', description: 'Move to the next question in the quiz (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiBody({ type: AdvanceSessionRequest })
+  @ApiResponseDec({ status: 200, description: 'Advanced to next question' })
+  @ApiResponseDec({ status: 403, description: 'Only teachers can advance questions' })
   async advance(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
@@ -80,6 +105,9 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/state')
+  @ApiOperation({ summary: 'Get session state', description: 'Get current state of the session' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Session state retrieved' })
   async state(@Param('id') id: string): Promise<ApiResponse<SessionDto>> {
     const state = await this.sessionService.getSessionState(id);
     return successResponse(state);
@@ -87,6 +115,10 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/start')
+  @ApiOperation({ summary: 'Start quiz', description: 'Start the quiz from lobby state (Teacher only). This advances to the first question.' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Quiz started successfully' })
+  @ApiResponseDec({ status: 403, description: 'Only teachers can start the quiz' })
   async start(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
@@ -97,6 +129,9 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/quiz')
+  @ApiOperation({ summary: 'Get session quiz', description: 'Get the quiz associated with this session' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Quiz retrieved' })
   async quiz(@Param('id') id: string): Promise<ApiResponse<any>> {
     const quiz = await this.sessionService.getQuizForSession(id);
     return successResponse(quiz);
@@ -104,6 +139,9 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/results')
+  @ApiOperation({ summary: 'Get session results', description: 'Get final results for the session' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Results retrieved' })
   async results(@Param('id') id: string): Promise<ApiResponse<any>> {
     const results = await this.sessionService.getResults(id);
     return successResponse(results);
@@ -111,6 +149,10 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post(':id/finish')
+  @ApiOperation({ summary: 'Finish session', description: 'Mark the session as finished (Teacher only)' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Session finished successfully' })
+  @ApiResponseDec({ status: 403, description: 'Only teachers can finish sessions' })
   async finish(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
@@ -121,6 +163,9 @@ export class SessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get(':id/question-stats')
+  @ApiOperation({ summary: 'Get question statistics', description: 'Get statistics for the current question (how many students answered)' })
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiResponseDec({ status: 200, description: 'Statistics retrieved' })
   async questionStats(@Param('id') id: string): Promise<ApiResponse<any>> {
     const stats = await this.sessionService.getCurrentQuestionStats(id);
     return successResponse(stats);

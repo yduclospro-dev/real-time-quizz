@@ -523,11 +523,7 @@ export function useQuizSession() {
 
   const handleConfirmQuit = () => {
     setShowQuitModal(false);
-    if (isTeacher) {
-      router.push("/quiz");
-    } else {
-      router.push("/join");
-    }
+    router.push("/");
   };
 
   // ============================================

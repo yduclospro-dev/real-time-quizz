@@ -115,7 +115,7 @@
     },
     "/quiz/{id}/start": {
       "post": {
-        "description": "Creates and starts a new quiz session (Teacher only)",
+        "description": "Creates a new quiz session in lobby state (Teacher only). The session is not started until the teacher clicks \"Démarrer le quiz\" button.",
         "operationId": "QuizController_startSession",
         "parameters": [
           {
@@ -141,7 +141,7 @@
             "bearer": []
           }
         ],
-        "summary": "Start quiz session",
+        "summary": "Create quiz session",
         "tags": [
           "quizzes"
         ]
@@ -181,11 +181,12 @@
         ]
       },
       "get": {
+        "description": "Retrieves all quizzes for the authenticated user",
         "operationId": "QuizController_findAll",
         "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Quizzes retrieved successfully"
           }
         },
         "security": [
@@ -193,6 +194,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get all quizzes",
         "tags": [
           "quizzes"
         ]
@@ -232,12 +234,14 @@
         ]
       },
       "put": {
+        "description": "Updates an existing quiz (Teacher only)",
         "operationId": "QuizController_updateQuiz",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Quiz ID",
             "schema": {
               "type": "string"
             }
@@ -255,7 +259,13 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Quiz updated successfully"
+          },
+          "403": {
+            "description": "Only teachers can update quizzes"
+          },
+          "404": {
+            "description": "Quiz not found"
           }
         },
         "security": [
@@ -263,17 +273,20 @@
             "bearer": []
           }
         ],
+        "summary": "Update quiz",
         "tags": [
           "quizzes"
         ]
       },
       "delete": {
+        "description": "Deletes a quiz (Teacher only)",
         "operationId": "QuizController_deleteQuiz",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Quiz ID",
             "schema": {
               "type": "string"
             }
@@ -281,7 +294,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Quiz deleted successfully"
+          },
+          "403": {
+            "description": "Only teachers can delete quizzes"
+          },
+          "404": {
+            "description": "Quiz not found"
           }
         },
         "security": [
@@ -289,6 +308,7 @@
             "bearer": []
           }
         ],
+        "summary": "Delete quiz",
         "tags": [
           "quizzes"
         ]
@@ -328,22 +348,14 @@
         ]
       }
     },
-    "/session/{id}": {
+    "/session/history": {
       "get": {
-        "operationId": "SessionController_get",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "description": "Get all sessions the user participated in (as teacher or student)",
+        "operationId": "SessionController_getUserHistory",
+        "parameters": [],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Session history retrieved"
           }
         },
         "security": [
@@ -351,6 +363,41 @@
             "bearer": []
           }
         ],
+        "summary": "Get user session history",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}": {
+      "get": {
+        "description": "Get session details by ID",
+        "operationId": "SessionController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session found"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get session",
         "tags": [
           "sessions"
         ]
@@ -358,12 +405,14 @@
     },
     "/session/{id}/submit": {
       "post": {
+        "description": "Submit an answer for the current question",
         "operationId": "SessionController_submit",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -380,8 +429,11 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Answer submitted successfully"
+          },
+          "404": {
+            "description": "Session or participant not found"
           }
         },
         "security": [
@@ -389,6 +441,7 @@
             "bearer": []
           }
         ],
+        "summary": "Submit answer",
         "tags": [
           "sessions"
         ]
@@ -396,12 +449,14 @@
     },
     "/session/{id}/advance": {
       "post": {
+        "description": "Move to the next question in the quiz (Teacher only)",
         "operationId": "SessionController_advance",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -418,8 +473,11 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Advanced to next question"
+          },
+          "403": {
+            "description": "Only teachers can advance questions"
           }
         },
         "security": [
@@ -427,6 +485,7 @@
             "bearer": []
           }
         ],
+        "summary": "Advance to next question",
         "tags": [
           "sessions"
         ]
@@ -434,12 +493,14 @@
     },
     "/session/{id}/state": {
       "get": {
+        "description": "Get current state of the session",
         "operationId": "SessionController_state",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -447,7 +508,7 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Session state retrieved"
           }
         },
         "security": [
@@ -455,6 +516,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get session state",
         "tags": [
           "sessions"
         ]
@@ -462,20 +524,25 @@
     },
     "/session/{id}/start": {
       "post": {
+        "description": "Start the quiz from lobby state (Teacher only). This advances to the first question.",
         "operationId": "SessionController_start",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
           }
         ],
         "responses": {
-          "201": {
-            "description": ""
+          "200": {
+            "description": "Quiz started successfully"
+          },
+          "403": {
+            "description": "Only teachers can start the quiz"
           }
         },
         "security": [
@@ -483,6 +550,7 @@
             "bearer": []
           }
         ],
+        "summary": "Start quiz",
         "tags": [
           "sessions"
         ]
@@ -490,12 +558,14 @@
     },
     "/session/{id}/quiz": {
       "get": {
+        "description": "Get the quiz associated with this session",
         "operationId": "SessionController_quiz",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -503,7 +573,7 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Quiz retrieved"
           }
         },
         "security": [
@@ -511,6 +581,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get session quiz",
         "tags": [
           "sessions"
         ]
@@ -518,12 +589,14 @@
     },
     "/session/{id}/results": {
       "get": {
+        "description": "Get final results for the session",
         "operationId": "SessionController_results",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -531,7 +604,7 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Results retrieved"
           }
         },
         "security": [
@@ -539,6 +612,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get session results",
         "tags": [
           "sessions"
         ]
@@ -546,40 +620,14 @@
     },
     "/session/{id}/finish": {
       "post": {
+        "description": "Mark the session as finished (Teacher only)",
         "operationId": "SessionController_finish",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "sessions"
-        ]
-      }
-    },
-    "/session/{id}/question-stats": {
-      "get": {
-        "operationId": "SessionController_questionStats",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
+            "description": "Session ID",
             "schema": {
               "type": "string"
             }
@@ -587,7 +635,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Session finished successfully"
+          },
+          "403": {
+            "description": "Only teachers can finish sessions"
           }
         },
         "security": [
@@ -595,6 +646,38 @@
             "bearer": []
           }
         ],
+        "summary": "Finish session",
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/session/{id}/question-stats": {
+      "get": {
+        "description": "Get statistics for the current question (how many students answered)",
+        "operationId": "SessionController_questionStats",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Session ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics retrieved"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get question statistics",
         "tags": [
           "sessions"
         ]
@@ -701,21 +784,154 @@
           "password"
         ]
       },
+      "CreateAnswerRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Answer text",
+            "example": "Paris"
+          },
+          "isCorrect": {
+            "type": "boolean",
+            "description": "Whether this answer is correct",
+            "example": true
+          }
+        },
+        "required": [
+          "text",
+          "isCorrect"
+        ]
+      },
+      "CreateQuestionRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Question text",
+            "example": "What is the capital of France?"
+          },
+          "type": {
+            "type": "string",
+            "description": "Question type",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE"
+            ],
+            "example": "SINGLE_CHOICE"
+          },
+          "image": {
+            "type": "string",
+            "description": "Optional image URL for the question",
+            "example": "https://example.com/image.jpg"
+          },
+          "answers": {
+            "description": "List of possible answers (minimum 2)",
+            "example": [
+              {
+                "text": "Paris",
+                "isCorrect": true
+              },
+              {
+                "text": "London",
+                "isCorrect": false
+              }
+            ],
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateAnswerRequest"
+            }
+          },
+          "timeLimit": {
+            "type": "number",
+            "description": "Time limit for this question in seconds (5-3600)",
+            "example": 30,
+            "minimum": 5,
+            "maximum": 3600
+          }
+        },
+        "required": [
+          "text",
+          "type",
+          "answers"
+        ]
+      },
       "CreateQuizRequest": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Quiz title",
+            "example": "Geography Quiz"
+          },
+          "questions": {
+            "description": "List of questions (minimum 1)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateQuestionRequest"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "questions"
+        ]
       },
       "JoinSessionRequest": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "sessionCode": {
+            "type": "string",
+            "description": "Session code to join (6 characters)",
+            "example": "ABC123",
+            "minLength": 6,
+            "maxLength": 6
+          }
+        },
+        "required": [
+          "sessionCode"
+        ]
       },
       "SubmitAnswerRequest": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "questionId": {
+            "type": "string",
+            "description": "Question ID to submit answer for",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "selectedAnswerIds": {
+            "description": "Array of selected answer IDs",
+            "example": [
+              "550e8400-e29b-41d4-a716-446655440001"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "questionId",
+          "selectedAnswerIds"
+        ]
       },
       "AdvanceSessionRequest": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "nextQuestionIndex": {
+            "type": "number",
+            "description": "Index of the next question to advance to",
+            "example": 1,
+            "minimum": 0
+          },
+          "timeLimitSeconds": {
+            "type": "number",
+            "description": "Time limit for the next question in seconds",
+            "example": 30,
+            "minimum": 1
+          }
+        }
       }
     }
   }

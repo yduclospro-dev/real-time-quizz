@@ -55,14 +55,14 @@ export default function Home() {
                   </p>
                 </Link>
                 <Link
-                  href="/sessions"
+                  href="/history"
                   className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
                 >
                   <h3 className="text-xl font-semibold mb-2 text-gray-900">
-                    Sessions actives
+                    Historique
                   </h3>
                   <p className="text-gray-600">
-                    Lancez et suivez vos sessions de quiz en direct
+                    Consultez vos sessions en cours et passées
                   </p>
                 </Link>
               </>
@@ -87,7 +87,7 @@ export default function Home() {
                     Mon historique
                   </h3>
                   <p className="text-gray-600">
-                    Consultez vos résultats et performances passées
+                    Consultez vos sessions en cours et vos résultats passés
                   </p>
                 </Link>
               </>

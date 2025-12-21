@@ -10,7 +10,7 @@ export function HeaderWrapper() {
   if (
     pathname === '/login' ||
     pathname === '/register' ||
-    pathname === '/quiz/create' ||
+    pathname === '/quiz/new' ||
     pathname?.startsWith('/quiz/') && pathname?.includes('/session')
   ) {
     return null;
@@ -25,6 +25,7 @@ export function HeaderWrapper() {
   let title = '';
   if (pathname === '/join') title = 'Rejoindre une session';
   if (pathname === '/quiz') title = 'Mes quiz';
+  if (pathname === '/history') title = 'Historique';
 
   return <Header title={title} />;
 }

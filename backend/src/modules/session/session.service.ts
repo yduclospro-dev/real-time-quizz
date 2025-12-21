@@ -528,4 +528,91 @@ export class SessionService {
       submissions,
     };
   }
+
+  async getUserSessionHistory(userId: string) {
+    // Get sessions where user is a participant
+    const participantSessions = await this.prisma.sessionParticipant.findMany({
+      where: { userId },
+      include: {
+        session: {
+          include: {
+            quiz: {
+              select: {
+                title: true,
+                authorId: true,
+              },
+            },
+            participants: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        session: {
+          createdAt: 'desc',
+        },
+      },
+    });
+
+    // Get sessions where user is the quiz author (teacher)
+    const authorSessions = await this.prisma.session.findMany({
+      where: {
+        quiz: {
+          authorId: userId,
+        },
+      },
+      include: {
+        quiz: {
+          select: {
+            title: true,
+            authorId: true,
+          },
+        },
+        participants: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Merge and deduplicate
+    const allSessions = [
+      ...participantSessions.map((p) => ({
+        ...p.session,
+        isAuthor: p.session.quiz.authorId === userId,
+      })),
+      ...authorSessions.map((s) => ({
+        ...s,
+        isAuthor: s.quiz.authorId === userId,
+      })),
+    ];
+
+    // Remove duplicates by session ID
+    const uniqueSessions = Array.from(
+      new Map(allSessions.map((s) => [s.id, s])).values(),
+    );
+
+    // Sort by creation date desc
+    uniqueSessions.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+
+    return uniqueSessions.map((session) => ({
+      id: session.id,
+      code: session.code,
+      state: mapSessionState(session.state),
+      quizId: session.quizId,
+      quizTitle: session.quiz.title,
+      participantCount: session.participants.length,
+      createdAt: session.createdAt.toISOString(),
+      isAuthor: session.isAuthor,
+    }));
+  }
 }
